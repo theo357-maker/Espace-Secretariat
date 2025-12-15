@@ -6263,6 +6263,309 @@ window.clearAppCache = function() {
   }, 1000);
 };
 </script>
+    <script>
+
+        // === INSTALLATION ET MISE À JOUR DE L'APPLICATION ===
+
+// Vérifier si le service worker est supporté
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      // Enregistrer le service worker
+      const registration = await navigator.serviceWorker.register('sw.js');
+      console.log('✅ Service Worker enregistré avec succès:', registration);
+
+      // Vérifier l'installation de l'application
+      checkAppInstallation();
+      
+      // Écouter les messages du service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'NEW_VERSION_DETECTED') {
+          showUpdateNotification(event.data.version, event.data.previousVersion);
+        }
+        
+        if (event.data.type === 'UPDATE_AVAILABLE') {
+          showMandatoryUpdateNotification(
+            event.data.newVersion, 
+            event.data.currentVersion,
+            event.data.updateUrl
+          );
+        }
+      });
+      
+      // Vérifier les mises à jour périodiquement
+      setInterval(() => {
+        checkForUpdates();
+      }, 3600000); // Toutes les heures
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'enregistrement du Service Worker:', error);
+    }
+  });
+}
+
+// Vérifier si l'application est installée
+function checkAppInstallation() {
+  // Vérifier si l'application peut être installée
+  window.addEventListener('beforeinstallprompt', (event) => {
+    // Empêcher l'affichage automatique du prompt
+    event.preventDefault();
+    
+    // Stocker l'événement pour plus tard
+    window.deferredPrompt = event;
+    
+    // Afficher une notification pour l'installation
+    showInstallNotification();
+  });
+
+  // Vérifier si l'application est déjà installée
+  if (window.matchMedia('(display-mode: standalone)').matches || 
+      window.navigator.standalone === true) {
+    console.log('✅ Application déjà installée');
+  } else {
+    console.log('📱 Application non installée');
+  }
+}
+
+// Afficher une notification pour l'installation
+function showInstallNotification() {
+  // Vérifier si on n'a pas déjà montré la notification aujourd'hui
+  const lastInstallPrompt = localStorage.getItem('last_install_prompt');
+  const today = new Date().toDateString();
+  
+  if (lastInstallPrompt === today) {
+    return; // Ne pas montrer plus d'une fois par jour
+  }
+  
+  // Sauvegarder la date du prompt
+  localStorage.setItem('last_install_prompt', today);
+  
+  // Afficher une notification toast
+  const installToast = document.createElement('div');
+  installToast.className = 'notification-toast info';
+  installToast.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="fas fa-download"></i> Installer l'application
+      </div>
+      <button class="notification-close">&times;</button>
+    </div>
+    <div class="notification-body">
+      <p>Installez l'application pour un accès plus rapide et une utilisation hors ligne.</p>
+      <div class="notification-actions" style="margin-top: 10px;">
+        <button class="btn btn-success btn-sm" id="install-app-btn">
+          <i class="fas fa-download"></i> Installer
+        </button>
+        <button class="btn btn-secondary btn-sm" id="later-install-btn">
+          Plus tard
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(installToast);
+  
+  setTimeout(() => {
+    installToast.classList.add('show');
+  }, 1000);
+  
+  // Gérer le bouton d'installation
+  document.getElementById('install-app-btn').addEventListener('click', async () => {
+    installToast.classList.remove('show');
+    setTimeout(() => installToast.remove(), 300);
+    
+    if (window.deferredPrompt) {
+      window.deferredPrompt.prompt();
+      const { outcome } = await window.deferredPrompt.userChoice;
+      console.log(`Résultat de l'installation: ${outcome}`);
+      window.deferredPrompt = null;
+    }
+  });
+  
+  // Gérer le bouton "Plus tard"
+  document.getElementById('later-install-btn').addEventListener('click', () => {
+    installToast.classList.remove('show');
+    setTimeout(() => installToast.remove(), 300);
+  });
+  
+  // Fermer le toast
+  installToast.querySelector('.notification-close').addEventListener('click', () => {
+    installToast.classList.remove('show');
+    setTimeout(() => installToast.remove(), 300);
+  });
+  
+  // Fermer automatiquement après 15 secondes
+  setTimeout(() => {
+    if (installToast.parentNode) {
+      installToast.classList.remove('show');
+      setTimeout(() => installToast.remove(), 300);
+    }
+  }, 15000);
+}
+
+// Afficher une notification de mise à jour
+function showUpdateNotification(newVersion, previousVersion) {
+  const updateToast = document.createElement('div');
+  updateToast.className = 'notification-toast success';
+  updateToast.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="fas fa-sync-alt"></i> Mise à jour disponible
+      </div>
+      <button class="notification-close">&times;</button>
+    </div>
+    <div class="notification-body">
+      <p>Une nouvelle version (${newVersion}) de l'application est disponible !</p>
+      <p><small>Version précédente: ${previousVersion || 'inconnue'}</small></p>
+      <div class="notification-actions" style="margin-top: 10px;">
+        <button class="btn btn-primary btn-sm" id="update-app-btn">
+          <i class="fas fa-redo"></i> Mettre à jour
+        </button>
+        <button class="btn btn-secondary btn-sm" id="later-update-btn">
+          Plus tard
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(updateToast);
+  
+  setTimeout(() => {
+    updateToast.classList.add('show');
+  }, 1000);
+  
+  // Gérer le bouton de mise à jour
+  document.getElementById('update-app-btn').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+    
+    // Recharger la page pour activer la nouvelle version
+    window.location.reload();
+  });
+  
+  // Gérer le bouton "Plus tard"
+  document.getElementById('later-update-btn').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+  });
+  
+  // Fermer le toast
+  updateToast.querySelector('.notification-close').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+  });
+}
+
+// Afficher une notification de mise à jour obligatoire
+function showMandatoryUpdateNotification(newVersion, currentVersion, updateUrl) {
+  const mandatoryToast = document.createElement('div');
+  mandatoryToast.className = 'notification-toast danger';
+  mandatoryToast.style.zIndex = '99999'; // Assurez-vous qu'il est au-dessus de tout
+  mandatoryToast.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="fas fa-exclamation-triangle"></i> Mise à jour REQUISE
+      </div>
+      <button class="notification-close" disabled>&times;</button>
+    </div>
+    <div class="notification-body">
+      <p><strong>Mise à jour obligatoire !</strong></p>
+      <p>La version ${newVersion} est requise pour continuer à utiliser l'application.</p>
+      <p><small>Votre version actuelle: ${currentVersion}</small></p>
+      <div class="notification-actions" style="margin-top: 10px;">
+        <button class="btn btn-warning btn-sm" id="mandatory-update-btn">
+          <i class="fas fa-download"></i> Mettre à jour maintenant
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(mandatoryToast);
+  
+  setTimeout(() => {
+    mandatoryToast.classList.add('show');
+    
+    // Bloquer l'interface utilisateur
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    overlay.style.zIndex = '99998';
+    overlay.id = 'update-overlay';
+    document.body.appendChild(overlay);
+  }, 500);
+  
+  // Gérer le bouton de mise à jour obligatoire
+  document.getElementById('mandatory-update-btn').addEventListener('click', () => {
+    // Rediriger vers l'URL de mise à jour
+    window.location.href = updateUrl;
+  });
+  
+  // Empêcher la fermeture
+  mandatoryToast.querySelector('.notification-close').addEventListener('click', (e) => {
+    e.preventDefault();
+    showToast('Cette mise à jour est obligatoire pour continuer à utiliser l\'application', 'warning');
+  });
+}
+
+// Vérifier les mises à jour manuellement
+async function checkForUpdates() {
+  try {
+    const response = await fetch(`/version-check.json?t=${Date.now()}`);
+    const data = await response.json();
+    
+    // Vérifier la version actuelle depuis le service worker
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'GET_VERSION'
+      });
+    }
+    
+    // Comparer avec la version stockée localement
+    const currentVersion = localStorage.getItem('app_version');
+    
+    if (currentVersion !== data.version) {
+      // Nouvelle version disponible
+      showUpdateNotification(data.version, currentVersion);
+      localStorage.setItem('app_version', data.version);
+      
+      // Si la mise à jour est obligatoire
+      if (data.mandatory === true) {
+        showMandatoryUpdateNotification(data.version, currentVersion, data.updateUrl);
+      }
+    }
+    
+  } catch (error) {
+    console.error('Erreur lors de la vérification des mises à jour:', error);
+  }
+}
+
+// Vérifier la version au chargement
+window.addEventListener('load', () => {
+  // Stocker la version actuelle
+  if (!localStorage.getItem('app_version')) {
+    localStorage.setItem('app_version', '1.0.0');
+  }
+  
+  // Vérifier les mises à jour après 5 secondes
+  setTimeout(() => {
+    checkForUpdates();
+  }, 5000);
+});
+
+// Écouter les événements de mise à jour du service worker
+let refreshing = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (!refreshing) {
+    refreshing = true;
+    window.location.reload();
+  }
+});
+
+    </script>
 
 
 </body>
