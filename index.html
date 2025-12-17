@@ -19,6 +19,9 @@
   <meta name="theme-color" content="#3498db">
 <!-- Service Worker et mise à jour -->
 
+<meta name="version" content="2.1.0">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
 
 
   <!-- Apple Touch Icons -->
@@ -2386,29 +2389,33 @@
         }
 
         // --- Initialisation et Fonctions Utilitaires ---
-        function initializePortal() {
-            loadClassesIntoSelects();
-            loadClassesList();
-            loadPrimaryClassesList();
-            loadKindergartenClassesList();
-            loadDashboardStats();
-            loadStudentsList();
-            loadTeachersList();
-            loadPendingPaymentsList();
-            loadTeacherClasses();
-            loadPrimaryTeacherClasses();
-            loadKindergartenTeacherClasses();
-            loadFeesClasses();
-            setupPaymentForm();
-            setupStatsNavigation();
-            setupMenuDropdowns();
-            setupReportControls();
-            
-            // Charger les données hors ligne si disponibles
-            if (localStorage.getItem('offlineQueue')) {
-                offlineQueue = JSON.parse(localStorage.getItem('offlineQueue'));
-            }
-        }
+      function initializePortal() {
+    loadClassesIntoSelects();
+    loadClassesList();
+    loadPrimaryClassesList();
+    loadKindergartenClassesList();
+    loadDashboardStats();
+    loadStudentsList();
+    loadTeachersList();
+    loadPendingPaymentsList();
+    loadTeacherClasses();
+    loadPrimaryTeacherClasses();
+    loadKindergartenTeacherClasses();
+    loadFeesClasses();
+    setupPaymentForm();
+    setupStatsNavigation();
+    setupMenuDropdowns();
+    setupReportControls();
+    
+    // AJOUTEZ CES LIGNES :
+    loadAllClassesForReports();
+    populateExportClassSelect();
+    
+    // Charger les données hors ligne si disponibles
+    if (localStorage.getItem('offlineQueue')) {
+        offlineQueue = JSON.parse(localStorage.getItem('offlineQueue'));
+    }
+}
 
         function showAlert(message, type = 'info') {
             const alertBox = document.getElementById('global-alert');
@@ -3439,6 +3446,45 @@
                 console.error('Erreur chargement classes:', error);
             }
         }
+
+// Ajoutez cette fonction après la fonction loadClassesIntoSelects() existante
+async function loadAllClassesForReports() {
+    const reportClassSelect = document.getElementById('report-class');
+    const exportClassSelect = document.getElementById('export-class');
+    
+    if (!reportClassSelect || !exportClassSelect) return;
+    
+    try {
+        reportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+        exportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+        
+        // Classes secondaires
+        const classesSnap = await getDocs(collection(db, 'classes'));
+        classesSnap.forEach(doc => {
+            const data = doc.data();
+            reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+            exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+        });
+        
+        // Classes primaires
+        const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
+        primaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+            exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+        });
+        
+        // Classes maternelles
+        const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+        kindergartenClassesSnap.forEach(doc => {
+            const data = doc.data();
+            reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+            exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+        });
+    } catch (error) {
+        console.error('Erreur chargement classes pour rapports:', error);
+    }
+}
         
         // Fonction pour charger la liste des classes secondaires
         async function loadClassesList() {
@@ -4066,219 +4112,231 @@
             });
         });
 
-        async function loadFeesData() {
-            const selectedStudentType = document.getElementById('fees-student-type').value;
-            const selectedClass = document.getElementById('fees-class').value;
-            const selectedMonth = document.getElementById('fees-month').value;
-            const selectedType = document.getElementById('fees-type').value;
-            
-            try {
-                let studentsList = [];
-                
-                // Récupérer les élèves selon le type sélectionné
-                if (selectedStudentType === 'all' || selectedStudentType === 'secondary') {
-                    const studentsSnap = await getDocs(query(collection(db, 'students'), where('status', '!=', 'deleted')));
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        if (!selectedClass || data.class === selectedClass) {
-                            studentsList.push({...data, studentType: 'secondary'});
-                        }
-                    });
-                }
-                
-                if (selectedStudentType === 'all' || selectedStudentType === 'primary') {
-                    const primaryStudentsSnap = await getDocs(query(collection(db, 'primary_students'), where('status', '!=', 'deleted')));
-                    primaryStudentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        if (!selectedClass || data.class === selectedClass) {
-                            studentsList.push({...data, studentType: 'primary'});
-                        }
-                    });
-                }
-                
-                if (selectedStudentType === 'all' || selectedStudentType === 'kindergarten') {
-                    const kindergartenStudentsSnap = await getDocs(query(collection(db, 'kindergarten_students'), where('status', '!=', 'deleted')));
-                    kindergartenStudentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        if (!selectedClass || data.class === selectedClass) {
-                            studentsList.push({...data, studentType: 'kindergarten'});
-                        }
-                    });
-                }
-                
-                // Récupérer les paiements avec les filtres appropriés
-                let paymentsQuery = collection(db, 'payments');
-                
-                if (selectedMonth && selectedMonth !== 'all') {
-                    paymentsQuery = query(paymentsQuery, where('month', '==', selectedMonth));
-                }
-                
-                if (selectedType && selectedType !== 'all') {
-                    paymentsQuery = query(paymentsQuery, where('paymentType', '==', selectedType));
-                }
-                
-                const paymentsSnap = await getDocs(paymentsQuery);
-                
-                // Organiser les paiements par étudiant
-                const studentPayments = {};
-                const studentPaidMonths = {};
-                const studentAmounts = {};
-                
-                paymentsSnap.forEach(doc => {
-                    const data = doc.data();
-                    const studentId = data.studentId;
-                    
-                    if (!studentPayments[studentId]) {
-                        studentPayments[studentId] = [];
-                        studentPaidMonths[studentId] = [];
-                        studentAmounts[studentId] = 0;
+        // --- Gestion des Frais (VERSION CORRIGÉE POUR ÉVITER LES INDEX COMPOSITES) ---
+async function loadFeesData() {
+    const selectedStudentType = document.getElementById('fees-student-type').value;
+    const selectedClass = document.getElementById('fees-class').value;
+    const selectedMonth = document.getElementById('fees-month').value;
+    const selectedType = document.getElementById('fees-type').value;
+    
+    try {
+        let studentsList = [];
+        
+        // Récupérer TOUS les élèves d'abord, puis filtrer localement
+        if (selectedStudentType === 'all' || selectedStudentType === 'secondary') {
+            const studentsSnap = await getDocs(collection(db, 'students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                // Filtrer par statut localement
+                if (data.status !== 'deleted') {
+                    // Filtrer par classe localement si sélectionnée
+                    if (!selectedClass || data.class === selectedClass) {
+                        studentsList.push({...data, studentType: 'secondary'});
                     }
-                    
-                    studentPayments[studentId].push(data);
-                    studentPaidMonths[studentId].push(data.month);
-                    studentAmounts[studentId] += data.amount;
-                });
-                
-                // Calculer les statistiques
-                const totalStudents = studentsList.length;
-                let paidCount = 0;
-                let unpaidCount = 0;
-                
-                // Analyser chaque étudiant
-                studentsList.forEach(student => {
-                    const studentId = student.matricule;
-                    const hasPayment = studentPayments[studentId] && studentPayments[studentId].length > 0;
-                    
-                    if (hasPayment) {
-                        // Vérifier si l'étudiant a payé pour le mois sélectionné
-                        if (selectedMonth && selectedMonth !== 'all') {
-                            const paidThisMonth = studentPaidMonths[studentId]?.includes(selectedMonth);
-                            if (paidThisMonth) {
-                                paidCount++;
-                            } else {
-                                unpaidCount++;
-                            }
-                        } else {
-                            // Pour "Tous les mois", considérer comme payé s'il a au moins un paiement
-                            paidCount++;
-                        }
+                }
+            });
+        }
+        
+        if (selectedStudentType === 'all' || selectedStudentType === 'primary') {
+            const primaryStudentsSnap = await getDocs(collection(db, 'primary_students'));
+            primaryStudentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    if (!selectedClass || data.class === selectedClass) {
+                        studentsList.push({...data, studentType: 'primary'});
+                    }
+                }
+            });
+        }
+        
+        if (selectedStudentType === 'all' || selectedStudentType === 'kindergarten') {
+            const kindergartenStudentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+            kindergartenStudentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    if (!selectedClass || data.class === selectedClass) {
+                        studentsList.push({...data, studentType: 'kindergarten'});
+                    }
+                }
+            });
+        }
+        
+        // Récupérer TOUS les paiements d'abord, puis filtrer localement
+        let allPayments = [];
+        const paymentsSnap = await getDocs(collection(db, 'payments'));
+        paymentsSnap.forEach(doc => {
+            allPayments.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Filtrer les paiements localement
+        let filteredPayments = allPayments;
+        if (selectedMonth && selectedMonth !== 'all') {
+            filteredPayments = filteredPayments.filter(payment => payment.month === selectedMonth);
+        }
+        if (selectedType && selectedType !== 'all') {
+            filteredPayments = filteredPayments.filter(payment => payment.paymentType === selectedType);
+        }
+        
+        // Organiser les paiements par étudiant
+        const studentPayments = {};
+        const studentPaidMonths = {};
+        const studentAmounts = {};
+        
+        filteredPayments.forEach(payment => {
+            const studentId = payment.studentId;
+            
+            if (!studentPayments[studentId]) {
+                studentPayments[studentId] = [];
+                studentPaidMonths[studentId] = [];
+                studentAmounts[studentId] = 0;
+            }
+            
+            studentPayments[studentId].push(payment);
+            studentPaidMonths[studentId].push(payment.month);
+            studentAmounts[studentId] += payment.amount;
+        });
+        
+        // Calculer les statistiques
+        const totalStudents = studentsList.length;
+        let paidCount = 0;
+        let unpaidCount = 0;
+        
+        // Analyser chaque étudiant
+        studentsList.forEach(student => {
+            const studentId = student.matricule;
+            const hasPayment = studentPayments[studentId] && studentPayments[studentId].length > 0;
+            
+            if (hasPayment) {
+                // Vérifier si l'étudiant a payé pour le mois sélectionné
+                if (selectedMonth && selectedMonth !== 'all') {
+                    const paidThisMonth = studentPaidMonths[studentId]?.includes(selectedMonth);
+                    if (paidThisMonth) {
+                        paidCount++;
                     } else {
                         unpaidCount++;
                     }
-                });
-                
-                const paymentRate = totalStudents > 0 ? Math.round((paidCount / totalStudents) * 100) : 0;
-                
-                // Mettre à jour les statistiques
-                document.getElementById('total-students-fees').textContent = totalStudents;
-                document.getElementById('paid-students').textContent = paidCount;
-                document.getElementById('unpaid-students').textContent = unpaidCount;
-                document.getElementById('payment-rate').textContent = paymentRate + '%';
-                
-                // Mettre à jour les listes d'élèves
-                updateFeesStudentsLists(studentsList, studentPayments, studentPaidMonths, studentAmounts, selectedMonth, selectedType);
-                
-            } catch (error) {
-                console.error("Erreur chargement données frais:", error);
-                showAlert('Erreur lors du chargement des données: ' + error.message, 'error');
+                } else {
+                    // Pour "Tous les mois", considérer comme payé s'il a au moins un paiement
+                    paidCount++;
+                }
+            } else {
+                unpaidCount++;
             }
-        }
+        });
+        
+        const paymentRate = totalStudents > 0 ? Math.round((paidCount / totalStudents) * 100) : 0;
+        
+        // Mettre à jour les statistiques
+        document.getElementById('total-students-fees').textContent = totalStudents;
+        document.getElementById('paid-students').textContent = paidCount;
+        document.getElementById('unpaid-students').textContent = unpaidCount;
+        document.getElementById('payment-rate').textContent = paymentRate + '%';
+        
+        // Mettre à jour les listes d'élèves
+        updateFeesStudentsLists(studentsList, studentPayments, studentPaidMonths, studentAmounts, selectedMonth, selectedType);
+        
+    } catch (error) {
+        console.error("Erreur chargement données frais:", error);
+        showAlert('Erreur lors du chargement des données: ' + error.message, 'error');
+    }
+}
 
-        async function updateFeesStudentsLists(studentsList, studentPayments, studentPaidMonths, studentAmounts, selectedMonth, selectedType) {
-            const unpaidList = document.getElementById('unpaid-students-list');
-            const paidList = document.getElementById('paid-students-list');
-            const allList = document.getElementById('all-students-list');
-            
-            let unpaidHTML = '';
-            let paidHTML = '';
-            let allHTML = '';
-            
-            for (const student of studentsList) {
-                const studentId = student.matricule;
-                const payments = studentPayments[studentId] || [];
-                const paidMonths = studentPaidMonths[studentId] || [];
-                const amountPaid = studentAmounts[studentId] || 0;
-                
-                const studentTypeText = student.studentType === 'secondary' ? 'Secondaire' : 
-                                      student.studentType === 'primary' ? 'Primaire' : 'Maternelle';
-                
-                // Déterminer si l'élève a payé pour le mois sélectionné
-                let hasPaidForSelectedMonth = false;
-                if (selectedMonth && selectedMonth !== 'all') {
-                    hasPaidForSelectedMonth = paidMonths.includes(selectedMonth);
-                } else {
-                    hasPaidForSelectedMonth = payments.length > 0;
-                }
-                
-                // Obtenir le dernier paiement
-                let lastPaymentDate = null;
-                let lastPaymentType = '';
-                if (payments.length > 0) {
-                    const sortedPayments = payments.sort((a, b) => b.validatedAt - a.validatedAt);
-                    lastPaymentDate = sortedPayments[0]?.validatedAt;
-                    lastPaymentType = sortedPayments[0]?.paymentType;
-                }
-                
-                const unpaidRowHTML = `
-                    <tr>
-                        <td>${student.matricule}</td>
-                        <td>${student.fullName}</td>
-                        <td>${studentTypeText}</td>
-                        <td>${student.class}</td>
-                        <td>${selectedType && selectedType !== 'all' ? selectedType : 'Tous'}</td>
-                        <td class="currency-display">$0.00</td>
-                        <td>${selectedMonth && selectedMonth !== 'all' ? selectedMonth : 'Tous'}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
-                            <button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>
-                        </td>
-                    </tr>
-                `;
-                
-                const paidRowHTML = `
-                    <tr>
-                        <td>${student.matricule}</td>
-                        <td>${student.fullName}</td>
-                        <td>${studentTypeText}</td>
-                        <td>${student.class}</td>
-                        <td>${lastPaymentType || 'Frais scolaires'}</td>
-                        <td class="currency-display">$${amountPaid.toFixed(2)}</td>
-                        <td>${formatDate(lastPaymentDate?.toDate())}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
-                        </td>
-                    </tr>
-                `;
-                
-                const allRowHTML = `
-                    <tr>
-                        <td>${student.matricule}</td>
-                        <td>${student.fullName}</td>
-                        <td>${studentTypeText}</td>
-                        <td>${student.class}</td>
-                        <td>${lastPaymentType || 'Aucun'}</td>
-                        <td class="currency-display">$${amountPaid.toFixed(2)}</td>
-                        <td>${hasPaidForSelectedMonth ? '<span class="badge badge-success">Payé</span>' : '<span class="badge badge-danger">Non payé</span>'}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
-                            ${!hasPaidForSelectedMonth ? `<button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-                
-                if (hasPaidForSelectedMonth) {
-                    paidHTML += paidRowHTML;
-                } else {
-                    unpaidHTML += unpaidRowHTML;
-                }
-                
-                allHTML += allRowHTML;
-            }
-            
-            unpaidList.innerHTML = unpaidHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève non payé</td></tr>';
-            paidList.innerHTML = paidHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève en ordre</td></tr>';
-            allList.innerHTML = allHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève trouvé</td></tr>';
+// Version corrigée de updateFeesStudentsLists (même que précédente, gardez-la)
+async function updateFeesStudentsLists(studentsList, studentPayments, studentPaidMonths, studentAmounts, selectedMonth, selectedType) {
+    const unpaidList = document.getElementById('unpaid-students-list');
+    const paidList = document.getElementById('paid-students-list');
+    const allList = document.getElementById('all-students-list');
+    
+    let unpaidHTML = '';
+    let paidHTML = '';
+    let allHTML = '';
+    
+    for (const student of studentsList) {
+        const studentId = student.matricule;
+        const payments = studentPayments[studentId] || [];
+        const paidMonths = studentPaidMonths[studentId] || [];
+        const amountPaid = studentAmounts[studentId] || 0;
+        
+        const studentTypeText = student.studentType === 'secondary' ? 'Secondaire' : 
+                              student.studentType === 'primary' ? 'Primaire' : 'Maternelle';
+        
+        // Déterminer si l'élève a payé pour le mois sélectionné
+        let hasPaidForSelectedMonth = false;
+        if (selectedMonth && selectedMonth !== 'all') {
+            hasPaidForSelectedMonth = paidMonths.includes(selectedMonth);
+        } else {
+            hasPaidForSelectedMonth = payments.length > 0;
         }
+        
+        // Obtenir le dernier paiement
+        let lastPaymentDate = null;
+        let lastPaymentType = '';
+        if (payments.length > 0) {
+            const sortedPayments = payments.sort((a, b) => b.validatedAt - a.validatedAt);
+            lastPaymentDate = sortedPayments[0]?.validatedAt;
+            lastPaymentType = sortedPayments[0]?.paymentType;
+        }
+        
+        const unpaidRowHTML = `
+            <tr>
+                <td>${student.matricule}</td>
+                <td>${student.fullName}</td>
+                <td>${studentTypeText}</td>
+                <td>${student.class}</td>
+                <td>${selectedType && selectedType !== 'all' ? selectedType : 'Tous'}</td>
+                <td class="currency-display">$0.00</td>
+                <td>${selectedMonth && selectedMonth !== 'all' ? selectedMonth : 'Tous'}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
+                    <button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>
+                </td>
+            </tr>
+        `;
+        
+        const paidRowHTML = `
+            <tr>
+                <td>${student.matricule}</td>
+                <td>${student.fullName}</td>
+                <td>${studentTypeText}</td>
+                <td>${student.class}</td>
+                <td>${lastPaymentType || 'Frais scolaires'}</td>
+                <td class="currency-display">$${amountPaid.toFixed(2)}</td>
+                <td>${formatDate(lastPaymentDate?.toDate())}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
+                </td>
+            </tr>
+        `;
+        
+        const allRowHTML = `
+            <tr>
+                <td>${student.matricule}</td>
+                <td>${student.fullName}</td>
+                <td>${studentTypeText}</td>
+                <td>${student.class}</td>
+                <td>${lastPaymentType || 'Aucun'}</td>
+                <td class="currency-display">$${amountPaid.toFixed(2)}</td>
+                <td>${hasPaidForSelectedMonth ? '<span class="badge badge-success">Payé</span>' : '<span class="badge badge-danger">Non payé</span>'}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
+                    ${!hasPaidForSelectedMonth ? `<button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>` : ''}
+                </td>
+            </tr>
+        `;
+        
+        if (hasPaidForSelectedMonth) {
+            paidHTML += paidRowHTML;
+        } else {
+            unpaidHTML += unpaidRowHTML;
+        }
+        
+        allHTML += allRowHTML;
+    }
+    
+    unpaidList.innerHTML = unpaidHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève non payé</td></tr>';
+    paidList.innerHTML = paidHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève en ordre</td></tr>';
+    allList.innerHTML = allHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève trouvé</td></tr>';
+}
 
         // Fonction pour traiter le paiement d'un étudiant directement depuis la gestion des frais
         window.processPaymentForStudent = async (studentMatricule, studentType, studentName, studentClass) => {
@@ -4427,123 +4485,192 @@
             }
         }
 
-        async function populateExportClassSelect() {
-            const selectEl = document.getElementById('export-class');
-            selectEl.innerHTML = '<option value="">Toutes les classes</option>';
+        // Remplacer la fonction populateExportClassSelect() par cette version corrigée
+async function populateExportClassSelect() {
+    const selectEl = document.getElementById('export-class');
+    if (!selectEl) return;
+    
+    selectEl.innerHTML = '<option value="">Toutes les classes</option>';
+    
+    try {
+        // Classes secondaires
+        const secondaryClassesSnap = await getDocs(collection(db, 'classes'));
+        secondaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            selectEl.innerHTML += `<option value="secondary:${data.name}">${data.name} (Secondaire)</option>`;
+        });
+        
+        // Classes primaires
+        const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
+        primaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            selectEl.innerHTML += `<option value="primary:${data.name}">${data.name} (Primaire)</option>`;
+        });
+        
+        // Classes maternelles
+        const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+        kindergartenClassesSnap.forEach(doc => {
+            const data = doc.data();
+            selectEl.innerHTML += `<option value="kindergarten:${data.name}">${data.name} (Maternelle)</option>`;
+        });
+    } catch (error) {
+        console.error("Erreur remplissage liste classes:", error);
+    }
+}
+
+// Remplacer la fonction d'export des données élèves par cette version corrigée
+document.getElementById('export-data-btn').addEventListener('click', async () => {
+    const exportType = document.getElementById('export-type').value;
+    const studentType = document.getElementById('export-student-type').value;
+    const classFilter = document.getElementById('export-class').value;
+    
+    try {
+        let students = [];
+        
+        // Récupérer les élèves selon les filtres
+        if (studentType === 'all' || studentType === 'secondary') {
+            let queryRef = collection(db, 'students');
             
-            try {
-                // Classes secondaires
-                const secondaryClassesSnap = await getDocs(collection(db, 'classes'));
-                secondaryClassesSnap.forEach(doc => {
+            if (classFilter) {
+                const [classType, className] = classFilter.split(':');
+                if (classType === 'secondary') {
+                    // Créer une requête avec les contraintes
+                    const q = query(queryRef, 
+                        where('status', '!=', 'deleted'),
+                        where('class', '==', className)
+                    );
+                    const studentsSnap = await getDocs(q);
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        students.push({...data, studentType: 'secondary'});
+                    });
+                } else if (!classFilter) {
+                    // Pas de filtre de classe
+                    const q = query(queryRef, where('status', '!=', 'deleted'));
+                    const studentsSnap = await getDocs(q);
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        students.push({...data, studentType: 'secondary'});
+                    });
+                }
+            } else {
+                // Pas de filtre de classe
+                const q = query(queryRef, where('status', '!=', 'deleted'));
+                const studentsSnap = await getDocs(q);
+                studentsSnap.forEach(doc => {
                     const data = doc.data();
-                    selectEl.innerHTML += `<option value="secondary:${data.name}">${data.name} (Secondaire)</option>`;
+                    students.push({...data, studentType: 'secondary'});
                 });
-                
-                // Classes primaires
-                const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
-                primaryClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    selectEl.innerHTML += `<option value="primary:${data.name}">${data.name} (Primaire)</option>`;
-                });
-                
-                // Classes maternelles
-                const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
-                kindergartenClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    selectEl.innerHTML += `<option value="kindergarten:${data.name}">${data.name} (Maternelle)</option>`;
-                });
-            } catch (error) {
-                console.error("Erreur remplissage liste classes:", error);
             }
         }
-
-        // Recherche d'élève pour modification
-        document.getElementById('search-student-btn').addEventListener('click', async () => {
-            const searchTerm = document.getElementById('search-student-modify').value.trim();
-            const searchType = document.getElementById('search-student-type').value;
+        
+        if (studentType === 'all' || studentType === 'primary') {
+            let queryRef = collection(db, 'primary_students');
             
-            if (!searchTerm) {
-                showAlert("Veuillez entrer un matricule ou un nom", "error");
-                return;
-            }
-            
-            const resultsContainer = document.getElementById('student-search-results');
-            resultsContainer.innerHTML = '<p>Recherche en cours...</p>';
-            
-            try {
-                let students = [];
-                const searchTermLower = searchTerm.toLowerCase();
-                
-                // Rechercher dans les élèves secondaires
-                if (searchType === 'all' || searchType === 'secondary') {
-                    const studentsSnap = await getDocs(query(collection(db, 'students'), where('status', '!=', 'deleted')));
+            if (classFilter) {
+                const [classType, className] = classFilter.split(':');
+                if (classType === 'primary') {
+                    const q = query(queryRef, 
+                        where('status', '!=', 'deleted'),
+                        where('class', '==', className)
+                    );
+                    const studentsSnap = await getDocs(q);
                     studentsSnap.forEach(doc => {
                         const data = doc.data();
-                        if (data.matricule.toLowerCase().includes(searchTermLower) || 
-                            data.fullName.toLowerCase().includes(searchTermLower)) {
-                            students.push({...data, type: 'secondary', docId: doc.id});
-                        }
+                        students.push({...data, studentType: 'primary'});
                     });
-                }
-                
-                // Rechercher dans les élèves primaires
-                if (searchType === 'all' || searchType === 'primary') {
-                    const studentsSnap = await getDocs(query(collection(db, 'primary_students'), where('status', '!=', 'deleted')));
+                } else if (!classFilter) {
+                    const q = query(queryRef, where('status', '!=', 'deleted'));
+                    const studentsSnap = await getDocs(q);
                     studentsSnap.forEach(doc => {
                         const data = doc.data();
-                        if (data.matricule.toLowerCase().includes(searchTermLower) || 
-                            data.fullName.toLowerCase().includes(searchTermLower)) {
-                            students.push({...data, type: 'primary', docId: doc.id});
-                        }
+                        students.push({...data, studentType: 'primary'});
                     });
                 }
-                
-                // Rechercher dans les élèves maternelles
-                if (searchType === 'all' || searchType === 'kindergarten') {
-                    const studentsSnap = await getDocs(query(collection(db, 'kindergarten_students'), where('status', '!=', 'deleted')));
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        if (data.matricule.toLowerCase().includes(searchTermLower) || 
-                            data.fullName.toLowerCase().includes(searchTermLower)) {
-                            students.push({...data, type: 'kindergarten', docId: doc.id});
-                        }
-                    });
-                }
-                
-                if (students.length === 0) {
-                    resultsContainer.innerHTML = '<p>Aucun élève trouvé</p>';
-                    return;
-                }
-                
-                let html = '<div class="table-container"><table><thead><tr><th>Matricule</th><th>Nom</th><th>Type</th><th>Classe</th><th>Actions</th></tr></thead><tbody>';
-                
-                students.forEach(student => {
-                    const typeText = student.type === 'secondary' ? 'Secondaire' : 
-                                   student.type === 'primary' ? 'Primaire' : 'Maternelle';
-                    
-                    html += `
-                        <tr>
-                            <td>${student.matricule}</td>
-                            <td>${student.fullName}</td>
-                            <td>${typeText}</td>
-                            <td>${student.class}</td>
-                            <td class="action-buttons">
-                                <button class="btn btn-primary btn-sm" onclick="viewStudentDetails('${student.matricule}', '${student.type}')">Détails</button>
-                                <button class="btn btn-warning btn-sm" onclick="editStudent('${student.matricule}', '${student.type}')">Modifier</button>
-                            </td>
-                        </tr>
-                    `;
+            } else {
+                const q = query(queryRef, where('status', '!=', 'deleted'));
+                const studentsSnap = await getDocs(q);
+                studentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    students.push({...data, studentType: 'primary'});
                 });
-                
-                html += '</tbody></table></div>';
-                resultsContainer.innerHTML = html;
-                
-            } catch (error) {
-                console.error("Erreur recherche élève:", error);
-                resultsContainer.innerHTML = '<p>Erreur lors de la recherche</p>';
             }
-        });
-
+        }
+        
+        if (studentType === 'all' || studentType === 'kindergarten') {
+            let queryRef = collection(db, 'kindergarten_students');
+            
+            if (classFilter) {
+                const [classType, className] = classFilter.split(':');
+                if (classType === 'kindergarten') {
+                    const q = query(queryRef, 
+                        where('status', '!=', 'deleted'),
+                        where('class', '==', className)
+                    );
+                    const studentsSnap = await getDocs(q);
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        students.push({...data, studentType: 'kindergarten'});
+                    });
+                } else if (!classFilter) {
+                    const q = query(queryRef, where('status', '!=', 'deleted'));
+                    const studentsSnap = await getDocs(q);
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        students.push({...data, studentType: 'kindergarten'});
+                    });
+                }
+            } else {
+                const q = query(queryRef, where('status', '!=', 'deleted'));
+                const studentsSnap = await getDocs(q);
+                studentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    students.push({...data, studentType: 'kindergarten'});
+                });
+            }
+        }
+        
+        if (students.length === 0) {
+            showAlert("Aucun élève à exporter", "warning");
+            return;
+        }
+        
+        // Préparer les données pour l'export
+        const exportData = students.map(student => ({
+            'Matricule': student.matricule,
+            'Nom complet': student.fullName,
+            'Type': student.studentType === 'secondary' ? 'Secondaire' : 
+                   student.studentType === 'primary' ? 'Primaire' : 'Maternelle',
+            'Classe': student.class,
+            'Date de naissance': student.birthdate,
+            'Lieu de naissance': student.birthplace || '',
+            'Sexe': student.gender === 'M' ? 'Masculin' : 'Féminin',
+            'Adresse': student.address || '',
+            'Téléphone': student.phone || '',
+            'Frais inscription': student.enrollmentFees || 0,
+            'Nom parent': student.parentName,
+            'Téléphone parent': student.parentPhone,
+            'Adresse parent': student.parentAddress || '',
+            'Statut': student.status === 'active' ? 'Actif' : 'Inactif',
+            'Date inscription': formatDate(student.createdAt?.toDate())
+        }));
+        
+        // Exporter selon le type choisi
+        if (exportType === 'excel') {
+            exportToExcel(exportData, 'eleves_cs_lacolombe');
+        } else if (exportType === 'csv') {
+            exportToCSV(exportData, 'eleves_cs_lacolombe');
+        } else if (exportType === 'pdf') {
+            exportToPDF(exportData, 'Liste des Élèves - CS la Colombe');
+        }
+        
+        showAlert(`Export réussi: ${students.length} élève(s) exporté(s)`, "success");
+        
+    } catch (error) {
+        console.error("Erreur export élèves:", error);
+        showAlert(`Erreur lors de l'export: ${error.message}`, "error");
+    }
+});
         // Export des données élèves
         document.getElementById('export-data-btn').addEventListener('click', async () => {
             const exportType = document.getElementById('export-type').value;
@@ -4987,39 +5114,60 @@
         });
 
         // --- Rapports Administratifs (CORRIGÉS) ---
-        function setupReportControls() {
-            const reportTypeSelect = document.getElementById('report-type');
-            
-            // Masquer tous les contrôles
-            document.querySelectorAll('.report-controls').forEach(ctrl => ctrl.classList.add('hidden'));
-            
-            // Afficher les contrôles appropriés
-            document.getElementById('daily-controls').classList.remove('hidden');
-            
-            // Écouter les changements du type de rapport
-            reportTypeSelect.addEventListener('change', function() {
-                // Masquer tous les contrôles
-                document.querySelectorAll('.report-controls').forEach(ctrl => ctrl.classList.add('hidden'));
-                
-                // Afficher les contrôles appropriés
-                if (this.value === 'daily') {
-                    document.getElementById('daily-controls').classList.remove('hidden');
-                } else if (this.value === 'monthly') {
-                    document.getElementById('monthly-controls').classList.remove('hidden');
-                } else if (this.value === 'yearly') {
-                    document.getElementById('yearly-controls').classList.remove('hidden');
-                } else if (this.value === 'enrollment') {
-                    document.getElementById('daily-controls').classList.remove('hidden');
-                    document.getElementById('class-controls').classList.remove('hidden');
-                } else if (this.value === 'payments-class') {
-                    document.getElementById('monthly-controls').classList.remove('hidden');
-                    document.getElementById('class-controls').classList.remove('hidden');
-                    document.getElementById('fees-type-controls').classList.remove('hidden');
-                } else if (this.value === 'fees') {
-                    document.getElementById('monthly-controls').classList.remove('hidden');
-                }
-            });
+      function setupReportControls() {
+    const reportTypeSelect = document.getElementById('report-type');
+    
+    if (!reportTypeSelect) return;
+    
+    // Masquer tous les contrôles
+    document.querySelectorAll('.report-controls').forEach(ctrl => ctrl.classList.add('hidden'));
+    
+    // Afficher les contrôles appropriés
+    const dailyControls = document.getElementById('daily-controls');
+    if (dailyControls) dailyControls.classList.remove('hidden');
+    
+    // Écouter les changements du type de rapport
+    reportTypeSelect.addEventListener('change', function() {
+        // Masquer tous les contrôles
+        document.querySelectorAll('.report-controls').forEach(ctrl => ctrl.classList.add('hidden'));
+        
+        // Afficher les contrôles appropriés
+        if (this.value === 'daily') {
+            if (document.getElementById('daily-controls')) {
+                document.getElementById('daily-controls').classList.remove('hidden');
+            }
+        } else if (this.value === 'monthly') {
+            if (document.getElementById('monthly-controls')) {
+                document.getElementById('monthly-controls').classList.remove('hidden');
+            }
+        } else if (this.value === 'yearly') {
+            if (document.getElementById('yearly-controls')) {
+                document.getElementById('yearly-controls').classList.remove('hidden');
+            }
+        } else if (this.value === 'enrollment') {
+            if (document.getElementById('daily-controls')) {
+                document.getElementById('daily-controls').classList.remove('hidden');
+            }
+            if (document.getElementById('class-controls')) {
+                document.getElementById('class-controls').classList.remove('hidden');
+            }
+        } else if (this.value === 'payments-class') {
+            if (document.getElementById('monthly-controls')) {
+                document.getElementById('monthly-controls').classList.remove('hidden');
+            }
+            if (document.getElementById('class-controls')) {
+                document.getElementById('class-controls').classList.remove('hidden');
+            }
+            if (document.getElementById('fees-type-controls')) {
+                document.getElementById('fees-type-controls').classList.remove('hidden');
+            }
+        } else if (this.value === 'fees') {
+            if (document.getElementById('monthly-controls')) {
+                document.getElementById('monthly-controls').classList.remove('hidden');
+            }
         }
+    });
+}
 
         document.getElementById('generate-report-btn').addEventListener('click', async () => {
             await generateReport();
@@ -5030,6 +5178,30 @@
             document.getElementById('report-content').classList.add('hidden');
             document.getElementById('back-report-btn').style.display = 'none';
         });
+
+function checkRequiredElements() {
+    const requiredElements = [
+        'report-class',
+        'export-class',
+        'report-type',
+        'export-type',
+        'export-student-type'
+    ];
+    
+    requiredElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Élément manquant: ${id}`);
+        } else {
+            console.log(`Élément trouvé: ${id}`);
+        }
+    });
+}
+
+// Appelez cette fonction après l'initialisation
+setTimeout(() => {
+    checkRequiredElements();
+}, 1000);
 
         async function generateReport() {
             const reportType = document.getElementById('report-type').value;
@@ -5732,13 +5904,15 @@
                 } else if (link.dataset.page === 'manage-fees') {
                     loadFeesData();
                     loadFeesClasses();
-                } else if (link.dataset.page === 'admin-reports') {
-                    setupReportControls();
-                    // Initialiser les dates pour les rapports
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('report-date').value = today;
-                    document.getElementById('report-year').value = new Date().getFullYear();
-                    loadClassesIntoSelects();
+              } else if (link.dataset.page === 'admin-reports') {
+    setupReportControls();
+    // Initialiser les dates pour les rapports
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('report-date').value = today;
+    document.getElementById('report-year').value = new Date().getFullYear();
+    // AJOUTEZ CETTE LIGNE :
+    loadAllClassesForReports();
+loadClassesIntoSelects();
                 } else if (link.dataset.page === 'manage-classes') {
                     loadClassesList();
                 } else if (link.dataset.page === 'manage-primary-classes') {
@@ -7541,6 +7715,172 @@ window.clearAppCache = function() {
     window.location.reload();
   }, 1000);
 };
+
+</script>
+
+<script>
+
+ Afficher une notification de mise à jour
+function showUpdateNotification(newVersion, previousVersion) {
+  const updateToast = document.createElement('div');
+  updateToast.className = 'notification-toast success';
+  updateToast.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="fas fa-sync-alt"></i> Mise à jour disponible
+      </div>
+      <button class="notification-close">&times;</button>
+    </div>
+    <div class="notification-body">
+      <p>Une nouvelle version (${newVersion}) de l'application est disponible !</p>
+      <p><small>Version précédente: ${previousVersion || 'inconnue'}</small></p>
+      <div class="notification-actions" style="margin-top: 10px;">
+        <button class="btn btn-primary btn-sm" id="update-app-btn">
+          <i class="fas fa-redo"></i> Mettre à jour
+        </button>
+        <button class="btn btn-secondary btn-sm" id="later-update-btn">
+          Plus tard
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(updateToast);
+  
+  setTimeout(() => {
+    updateToast.classList.add('show');
+  }, 1000);
+  
+  // Gérer le bouton de mise à jour
+  document.getElementById('update-app-btn').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+    
+    // Recharger la page pour activer la nouvelle version
+    window.location.reload();
+  });
+  
+  // Gérer le bouton "Plus tard"
+  document.getElementById('later-update-btn').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+  });
+  
+  // Fermer le toast
+  updateToast.querySelector('.notification-close').addEventListener('click', () => {
+    updateToast.classList.remove('show');
+    setTimeout(() => updateToast.remove(), 300);
+  });
+}
+
+// Afficher une notification de mise à jour obligatoire
+function showMandatoryUpdateNotification(newVersion, currentVersion, updateUrl) {
+  const mandatoryToast = document.createElement('div');
+  mandatoryToast.className = 'notification-toast danger';
+  mandatoryToast.style.zIndex = '99999'; // Assurez-vous qu'il est au-dessus de tout
+  mandatoryToast.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="fas fa-exclamation-triangle"></i> Mise à jour REQUISE
+      </div>
+      <button class="notification-close" disabled>&times;</button>
+    </div>
+    <div class="notification-body">
+      <p><strong>Mise à jour obligatoire !</strong></p>
+      <p>La version ${newVersion} est requise pour continuer à utiliser l'application.</p>
+      <p><small>Votre version actuelle: ${currentVersion}</small></p>
+      <div class="notification-actions" style="margin-top: 10px;">
+        <button class="btn btn-warning btn-sm" id="mandatory-update-btn">
+          <i class="fas fa-download"></i> Mettre à jour maintenant
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(mandatoryToast);
+  
+  setTimeout(() => {
+    mandatoryToast.classList.add('show');
+    
+    // Bloquer l'interface utilisateur
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    overlay.style.zIndex = '99998';
+    overlay.id = 'update-overlay';
+    document.body.appendChild(overlay);
+  }, 500);
+  
+  // Gérer le bouton de mise à jour obligatoire
+  document.getElementById('mandatory-update-btn').addEventListener('click', () => {
+    // Rediriger vers l'URL de mise à jour
+    window.location.href = updateUrl;
+  });
+  
+  // Empêcher la fermeture
+  mandatoryToast.querySelector('.notification-close').addEventListener('click', (e) => {
+    e.preventDefault();
+    showToast('Cette mise à jour est obligatoire pour continuer à utiliser l\'application', 'warning');
+  });
+}
+
+// Vérifier les mises à jour manuellement
+async function checkForUpdates() {
+  try {
+    const response = await fetch(`/version-check.json?t=${Date.now()}`);
+    const data = await response.json();
+    
+    // Vérifier la version actuelle depuis le service worker
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'GET_VERSION'
+      });
+    }
+    
+    // Comparer avec la version stockée localement
+    const currentVersion = localStorage.getItem('app_version');
+    
+    if (currentVersion !== data.version) {
+      // Nouvelle version disponible
+      showUpdateNotification(data.version, currentVersion);
+      localStorage.setItem('app_version', data.version);
+      
+      // Si la mise à jour est obligatoire
+      if (data.mandatory === true) {
+        showMandatoryUpdateNotification(data.version, currentVersion, data.updateUrl);
+      }
+    }
+    
+  } catch (error) {
+    console.error('Erreur lors de la vérification des mises à jour:', error);
+  }
+}
+
+// Vérifier la version au chargement
+window.addEventListener('load', () => {
+  // Stocker la version actuelle
+  if (!localStorage.getItem('app_version')) {
+    localStorage.setItem('app_version', '1.0.0');
+  }
+  
+  // Vérifier les mises à jour après 5 secondes
+  setTimeout(() => {
+    checkForUpdates();
+  }, 5000);
+});
+
+// Écouter les événements de mise à jour du service worker
+let refreshing = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (!refreshing) {
+    refreshing = true;
+    window.location.reload();
+  }
+});
 </script>
 </body>
 </html>
