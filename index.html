@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace Parent - CS la Colombe</title>
+    <title>Espace secretary - CS la Colombe</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <!-- PWA Meta Tags -->
@@ -19,8 +19,6 @@
   <meta name="theme-color" content="#3498db">
 <!-- Service Worker et mise à jour -->
 
-<meta name="version" content="2.1.0">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
 
 
@@ -263,6 +261,9 @@
         .fees-summary-card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; }
         .fees-summary-card h4 { margin-bottom: 0.5rem; color: var(--dark); }
         .fees-summary-card p { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+
+  .back-btn {
+   font-size: 20px;}
         
         /* --- Styles pour l'espace administratif --- */
         .admin-controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -453,7 +454,10 @@
                 <li><a href="#" data-page="manage-fees"><i class="fas fa-money-bill-wave fa-fw"></i> Gestion des Frais</a></li>
                 <li><a href="#" data-page="students-list"><i class="fas fa-users fa-fw"></i> Statistiques Élèves</a></li>
                 <li><a href="#" data-page="teachers-list"><i class="fas fa-user-tie fa-fw"></i> Statistiques Enseignants</a></li>
-                <li><a href="#" data-page="admin-reports"><i class="fas fa-chart-bar fa-fw"></i> Rapports Admin</a></li>
+             <li> <button class="back-btn" onclick="window.location.href='new.html'">
+              <i class="fas fa-bars"></i>
+                rapport general
+            </button></li>
                 <li><a href="#" data-page="profile"><i class="fas fa-user fa-fw"></i> Profil</a></li>
             </ul>
         </nav>
@@ -4375,116 +4379,122 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
         }
 
         async function loadClassStats() {
-            const container = document.getElementById('class-stats-container');
-            container.innerHTML = '<p>Chargement des statistiques...</p>';
-            
-            try {
-                // Récupérer toutes les classes
-                const secondaryClassesSnap = await getDocs(collection(db, 'classes'));
-                const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
-                const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
-                
-                let allClasses = [];
-                
-                // Classes secondaires
-                secondaryClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    allClasses.push({...data, type: 'secondary'});
-                });
-                
-                // Classes primaires
-                primaryClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    allClasses.push({...data, type: 'primary'});
-                });
-                
-                // Classes maternelles
-                kindergartenClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    allClasses.push({...data, type: 'kindergarten'});
-                });
-                
-                if (allClasses.length === 0) {
-                    container.innerHTML = '<p>Aucune classe trouvée</p>';
-                    return;
-                }
-                
-                let html = '';
-                
-                for (const classData of allClasses) {
-                    // Compter les élèves dans cette classe
-                    let studentCount = 0;
-                    let studentsList = [];
-                    
-                    if (classData.type === 'secondary') {
-                        const studentsSnap = await getDocs(query(collection(db, 'students'), where('class', '==', classData.name), where('status', '!=', 'deleted')));
-                        studentCount = studentsSnap.size;
-                        studentsSnap.forEach(doc => {
-                            const data = doc.data();
-                            studentsList.push(data);
-                        });
-                    } else if (classData.type === 'primary') {
-                        const studentsSnap = await getDocs(query(collection(db, 'primary_students'), where('class', '==', classData.name), where('status', '!=', 'deleted')));
-                        studentCount = studentsSnap.size;
-                        studentsSnap.forEach(doc => {
-                            const data = doc.data();
-                            studentsList.push(data);
-                        });
-                    } else {
-                        const studentsSnap = await getDocs(query(collection(db, 'kindergarten_students'), where('class', '==', classData.name), where('status', '!=', 'deleted')));
-                        studentCount = studentsSnap.size;
-                        studentsSnap.forEach(doc => {
-                            const data = doc.data();
-                            studentsList.push(data);
-                        });
-                    }
-                    
-                    const typeText = classData.type === 'secondary' ? 'Secondaire' : 
-                                   classData.type === 'primary' ? 'Primaire' : 'Maternelle';
-                    
-                    html += `
-                        <div class="class-stat-card">
-                            <div class="class-stat-header">
-                                <h5>${classData.name}</h5>
-                                <span class="badge ${classData.type === 'secondary' ? 'badge-primary' : classData.type === 'primary' ? 'badge-success' : 'badge-info'}">${typeText}</span>
-                            </div>
-                            <p><strong>Niveau:</strong> ${classData.level || 'Non spécifié'}</p>
-                            <p><strong>Capacité:</strong> ${classData.capacity || 'Non spécifié'}</p>
-                            <p><strong>Élèves inscrits:</strong> ${studentCount}</p>
-                            
-                            <div class="class-students-list">
-                                <h6>Liste des élèves (${studentCount})</h6>
-                                ${studentsList.length > 0 ? 
-                                    studentsList.map(student => `
-                                        <div class="class-student-item">
-                                            <span>${student.fullName}</span>
-                                            <span>${student.matricule}</span>
-                                        </div>
-                                    `).join('') : 
-                                    '<p>Aucun élève dans cette classe</p>'
-                                }
-                            </div>
-                            
-                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                                <button class="btn btn-primary btn-sm" onclick="exportClassStudents('${classData.name}', '${classData.type}')">
-                                    <i class="fas fa-download"></i> Exporter
-                                </button>
-                                <button class="btn btn-info btn-sm" onclick="viewClassDetails('${classData.name}', '${classData.type}')">
-                                    <i class="fas fa-eye"></i> Détails
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                container.innerHTML = html;
-                
-            } catch (error) {
-                console.error("Erreur chargement statistiques classes:", error);
-                container.innerHTML = '<p>Erreur lors du chargement des statistiques</p>';
-            }
+    const container = document.getElementById('class-stats-container');
+    container.innerHTML = '<p>Chargement des statistiques...</p>';
+    
+    try {
+        // Récupérer toutes les classes
+        const secondaryClassesSnap = await getDocs(collection(db, 'classes'));
+        const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
+        const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+        
+        let allClasses = [];
+        
+        // Classes secondaires
+        secondaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            allClasses.push({...data, type: 'secondary'});
+        });
+        
+        // Classes primaires
+        primaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            allClasses.push({...data, type: 'primary'});
+        });
+        
+        // Classes maternelles
+        kindergartenClassesSnap.forEach(doc => {
+            const data = doc.data();
+            allClasses.push({...data, type: 'kindergarten'});
+        });
+        
+        if (allClasses.length === 0) {
+            container.innerHTML = '<p>Aucune classe trouvée</p>';
+            return;
         }
-
+        
+        let html = '';
+        
+        for (const classData of allClasses) {
+            // Compter les élèves dans cette classe - NOUVELLE APPROCHE
+            let studentCount = 0;
+            let studentsList = [];
+            
+            if (classData.type === 'secondary') {
+                // Récupérer tous les élèves secondaires puis filtrer localement
+                const studentsSnap = await getDocs(collection(db, 'students'));
+                studentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.class === classData.name && data.status !== 'deleted') {
+                        studentCount++;
+                        studentsList.push(data);
+                    }
+                });
+            } else if (classData.type === 'primary') {
+                const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                studentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.class === classData.name && data.status !== 'deleted') {
+                        studentCount++;
+                        studentsList.push(data);
+                    }
+                });
+            } else {
+                const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                studentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.class === classData.name && data.status !== 'deleted') {
+                        studentCount++;
+                        studentsList.push(data);
+                    }
+                });
+            }
+            
+            const typeText = classData.type === 'secondary' ? 'Secondaire' : 
+                           classData.type === 'primary' ? 'Primaire' : 'Maternelle';
+            
+            html += `
+                <div class="class-stat-card">
+                    <div class="class-stat-header">
+                        <h5>${classData.name}</h5>
+                        <span class="badge ${classData.type === 'secondary' ? 'badge-primary' : classData.type === 'primary' ? 'badge-success' : 'badge-info'}">${typeText}</span>
+                    </div>
+                    <p><strong>Niveau:</strong> ${classData.level || 'Non spécifié'}</p>
+                    <p><strong>Capacité:</strong> ${classData.capacity || 'Non spécifié'}</p>
+                    <p><strong>Élèves inscrits:</strong> ${studentCount}</p>
+                    
+                    <div class="class-students-list">
+                        <h6>Liste des élèves (${studentCount})</h6>
+                        ${studentsList.length > 0 ? 
+                            studentsList.map(student => `
+                                <div class="class-student-item">
+                                    <span>${student.fullName}</span>
+                                    <span>${student.matricule}</span>
+                                </div>
+                            `).join('') : 
+                            '<p>Aucun élève dans cette classe</p>'
+                        }
+                    </div>
+                    
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="exportClassStudents('${classData.name}', '${classData.type}')">
+                            <i class="fas fa-download"></i> Exporter
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="viewClassDetails('${classData.name}', '${classData.type}')">
+                            <i class="fas fa-eye"></i> Détails
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error("Erreur chargement statistiques classes:", error);
+        container.innerHTML = '<p>Erreur lors du chargement des statistiques</p>';
+    }
+}
         // Remplacer la fonction populateExportClassSelect() par cette version corrigée
 async function populateExportClassSelect() {
     const selectEl = document.getElementById('export-class');
@@ -4527,107 +4537,58 @@ document.getElementById('export-data-btn').addEventListener('click', async () =>
     try {
         let students = [];
         
-        // Récupérer les élèves selon les filtres
+        // NOUVELLE APPROCHE : Récupérer tous les élèves puis filtrer localement
         if (studentType === 'all' || studentType === 'secondary') {
-            let queryRef = collection(db, 'students');
-            
-            if (classFilter) {
-                const [classType, className] = classFilter.split(':');
-                if (classType === 'secondary') {
-                    // Créer une requête avec les contraintes
-                    const q = query(queryRef, 
-                        where('status', '!=', 'deleted'),
-                        where('class', '==', className)
-                    );
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
+            const studentsSnap = await getDocs(collection(db, 'students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                // Filtrer par status localement
+                if (data.status !== 'deleted') {
+                    // Filtrer par classe si spécifié
+                    if (classFilter) {
+                        const [classType, className] = classFilter.split(':');
+                        if (classType === 'secondary' && data.class === className) {
+                            students.push({...data, studentType: 'secondary'});
+                        }
+                    } else {
                         students.push({...data, studentType: 'secondary'});
-                    });
-                } else if (!classFilter) {
-                    // Pas de filtre de classe
-                    const q = query(queryRef, where('status', '!=', 'deleted'));
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push({...data, studentType: 'secondary'});
-                    });
+                    }
                 }
-            } else {
-                // Pas de filtre de classe
-                const q = query(queryRef, where('status', '!=', 'deleted'));
-                const studentsSnap = await getDocs(q);
-                studentsSnap.forEach(doc => {
-                    const data = doc.data();
-                    students.push({...data, studentType: 'secondary'});
-                });
-            }
+            });
         }
         
         if (studentType === 'all' || studentType === 'primary') {
-            let queryRef = collection(db, 'primary_students');
-            
-            if (classFilter) {
-                const [classType, className] = classFilter.split(':');
-                if (classType === 'primary') {
-                    const q = query(queryRef, 
-                        where('status', '!=', 'deleted'),
-                        where('class', '==', className)
-                    );
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
+            const studentsSnap = await getDocs(collection(db, 'primary_students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    if (classFilter) {
+                        const [classType, className] = classFilter.split(':');
+                        if (classType === 'primary' && data.class === className) {
+                            students.push({...data, studentType: 'primary'});
+                        }
+                    } else {
                         students.push({...data, studentType: 'primary'});
-                    });
-                } else if (!classFilter) {
-                    const q = query(queryRef, where('status', '!=', 'deleted'));
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push({...data, studentType: 'primary'});
-                    });
+                    }
                 }
-            } else {
-                const q = query(queryRef, where('status', '!=', 'deleted'));
-                const studentsSnap = await getDocs(q);
-                studentsSnap.forEach(doc => {
-                    const data = doc.data();
-                    students.push({...data, studentType: 'primary'});
-                });
-            }
+            });
         }
         
         if (studentType === 'all' || studentType === 'kindergarten') {
-            let queryRef = collection(db, 'kindergarten_students');
-            
-            if (classFilter) {
-                const [classType, className] = classFilter.split(':');
-                if (classType === 'kindergarten') {
-                    const q = query(queryRef, 
-                        where('status', '!=', 'deleted'),
-                        where('class', '==', className)
-                    );
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
+            const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    if (classFilter) {
+                        const [classType, className] = classFilter.split(':');
+                        if (classType === 'kindergarten' && data.class === className) {
+                            students.push({...data, studentType: 'kindergarten'});
+                        }
+                    } else {
                         students.push({...data, studentType: 'kindergarten'});
-                    });
-                } else if (!classFilter) {
-                    const q = query(queryRef, where('status', '!=', 'deleted'));
-                    const studentsSnap = await getDocs(q);
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push({...data, studentType: 'kindergarten'});
-                    });
+                    }
                 }
-            } else {
-                const q = query(queryRef, where('status', '!=', 'deleted'));
-                const studentsSnap = await getDocs(q);
-                studentsSnap.forEach(doc => {
-                    const data = doc.data();
-                    students.push({...data, studentType: 'kindergarten'});
-                });
-            }
+            });
         }
         
         if (students.length === 0) {
@@ -5204,184 +5165,191 @@ setTimeout(() => {
 }, 1000);
 
         async function generateReport() {
-            const reportType = document.getElementById('report-type').value;
-            const reportDate = document.getElementById('report-date').value;
-            const reportMonth = document.getElementById('report-month').value;
-            const reportYear = document.getElementById('report-year') ? document.getElementById('report-year').value : new Date().getFullYear();
-            const reportClass = document.getElementById('report-class') ? document.getElementById('report-class').value : '';
-            const reportFeesType = document.getElementById('report-fees-type') ? document.getElementById('report-fees-type').value : '';
-            
-            try {
-                // Cacher les sections spécifiques
-                document.getElementById('class-payments-section').classList.add('hidden');
-                document.getElementById('enrollment-report-section').classList.add('hidden');
-                document.getElementById('fees-breakdown-section').classList.add('hidden');
-                document.getElementById('general-summary').classList.remove('hidden');
-                
-                let reportData = [];
-                let reportTitle = '';
-                let reportPeriod = '';
-                
-                if (reportType === 'daily') {
-                    if (!reportDate) {
-                        showAlert("Veuillez sélectionner une date", "error");
-                        return;
-                    }
-                    
-                    reportTitle = 'Rapport Journalier des Paiements';
-                    reportPeriod = `Date: ${new Date(reportDate).toLocaleDateString('fr-FR')}`;
-                    
-                    const startDate = new Date(reportDate);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + 1);
-                    
-                    const paymentsSnap = await getDocs(query(
-                        collection(db, 'payments'), 
-                        where('validatedAt', '>=', startDate),
-                        where('validatedAt', '<', endDate)
-                    ));
-                    
-                    reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                } else if (reportType === 'monthly') {
-                    if (!reportMonth) {
-                        showAlert("Veuillez sélectionner un mois", "error");
-                        return;
-                    }
-                    
-                    reportTitle = 'Rapport Mensuel des Paiements';
-                    reportPeriod = `Mois: ${reportMonth}`;
-                    
-                    const paymentsSnap = await getDocs(query(collection(db, 'payments'), where('month', '==', reportMonth)));
-                    reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                } else if (reportType === 'yearly') {
-                    reportTitle = 'Rapport Annuel des Paiements';
-                    reportPeriod = `Année: ${reportYear}`;
-                    
-                    const startDate = new Date(reportYear, 0, 1);
-                    const endDate = new Date(parseInt(reportYear) + 1, 0, 1);
-                    
-                    const paymentsSnap = await getDocs(query(
-                        collection(db, 'payments'), 
-                        where('validatedAt', '>=', startDate),
-                        where('validatedAt', '<', endDate)
-                    ));
-                    
-                    reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                } else if (reportType === 'fees') {
-                    if (!reportMonth) {
-                        showAlert("Veuillez sélectionner un mois", "error");
-                        return;
-                    }
-                    
-                    reportTitle = 'Rapport par Type de Frais';
-                    reportPeriod = `Mois: ${reportMonth}`;
-                    
-                    const paymentsSnap = await getDocs(query(collection(db, 'payments'), where('month', '==', reportMonth)));
-                    reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                    // Afficher le breakdown par type de frais
-                    document.getElementById('fees-breakdown-section').classList.remove('hidden');
-                    
-                } else if (reportType === 'enrollment') {
-                    if (!reportDate) {
-                        showAlert("Veuillez sélectionner une date", "error");
-                        return;
-                    }
-                    
-                    reportTitle = 'Rapport des Inscriptions';
-                    reportPeriod = `Date: ${new Date(reportDate).toLocaleDateString('fr-FR')}`;
-                    
-                    const startDate = new Date(reportDate);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + 1);
-                    
-                    // Récupérer les inscriptions de la journée
-                    let enrollments = [];
-                    
-                    // Élèves secondaires
-                    const secondarySnap = await getDocs(query(
-                        collection(db, 'students'), 
-                        where('createdAt', '>=', startDate),
-                        where('createdAt', '<', endDate),
-                        where('status', '!=', 'deleted')
-                    ));
-                    secondarySnap.forEach(doc => {
-                        enrollments.push({ ...doc.data(), type: 'secondary' });
-                    });
-                    
-                    // Élèves primaires
-                    const primarySnap = await getDocs(query(
-                        collection(db, 'primary_students'), 
-                        where('createdAt', '>=', startDate),
-                        where('createdAt', '<', endDate),
-                        where('status', '!=', 'deleted')
-                    ));
-                    primarySnap.forEach(doc => {
-                        enrollments.push({ ...doc.data(), type: 'primary' });
-                    });
-                    
-                    // Élèves maternelles
-                    const kindergartenSnap = await getDocs(query(
-                        collection(db, 'kindergarten_students'), 
-                        where('createdAt', '>=', startDate),
-                        where('createdAt', '<', endDate),
-                        where('status', '!=', 'deleted')
-                    ));
-                    kindergartenSnap.forEach(doc => {
-                        enrollments.push({ ...doc.data(), type: 'kindergarten' });
-                    });
-                    
-                    reportData = enrollments;
-                    
-                    // Afficher la section des inscriptions
-                    document.getElementById('enrollment-report-section').classList.remove('hidden');
-                    document.getElementById('general-summary').classList.add('hidden');
-                    
-                } else if (reportType === 'payments-class') {
-                    if (!reportMonth || !reportClass) {
-                        showAlert("Veuillez sélectionner un mois et une classe", "error");
-                        return;
-                    }
-                    
-                    reportTitle = `Rapport des Paiements - Classe ${reportClass}`;
-                    reportPeriod = `Mois: ${reportMonth}`;
-                    
-                    // Récupérer les paiements pour la classe et le mois spécifiés
-                    let paymentsQuery = query(collection(db, 'payments'), where('month', '==', reportMonth));
-                    
-                    if (reportFeesType && reportFeesType !== 'all') {
-                        paymentsQuery = query(paymentsQuery, where('paymentType', '==', reportFeesType));
-                    }
-                    
-                    const paymentsSnap = await getDocs(paymentsQuery);
-                    
-                    // Filtrer par classe
-                    reportData = paymentsSnap.docs
-                        .map(doc => ({ id: doc.id, ...doc.data() }))
-                        .filter(payment => {
-                            // Vérifier si l'élève appartient à la classe sélectionnée
-                            return payment.studentClass === reportClass;
-                        });
-                    
-                    // Afficher la section spécifique pour le rapport par classe
-                    document.getElementById('class-payments-section').classList.remove('hidden');
-                }
-                
-                // Générer le rapport
-                await generateReportContent(reportData, reportType, reportTitle, reportPeriod, reportClass, reportMonth);
-                
-                // Afficher le contenu du rapport
-                document.getElementById('report-content').classList.remove('hidden');
-                document.getElementById('back-report-btn').style.display = 'block';
-                
-            } catch (error) {
-                console.error("Erreur génération rapport:", error);
-                showAlert('Erreur lors de la génération du rapport: ' + error.message, 'error');
+    const reportType = document.getElementById('report-type').value;
+    const reportDate = document.getElementById('report-date').value;
+    const reportMonth = document.getElementById('report-month').value;
+    const reportYear = document.getElementById('report-year') ? document.getElementById('report-year').value : new Date().getFullYear();
+    const reportClass = document.getElementById('report-class') ? document.getElementById('report-class').value : '';
+    const reportFeesType = document.getElementById('report-fees-type') ? document.getElementById('report-fees-type').value : '';
+    
+    try {
+        // Cacher les sections spécifiques
+        document.getElementById('class-payments-section').classList.add('hidden');
+        document.getElementById('enrollment-report-section').classList.add('hidden');
+        document.getElementById('fees-breakdown-section').classList.add('hidden');
+        document.getElementById('general-summary').classList.remove('hidden');
+        
+        let reportData = [];
+        let reportTitle = '';
+        let reportPeriod = '';
+        
+        if (reportType === 'daily') {
+            if (!reportDate) {
+                showAlert("Veuillez sélectionner une date", "error");
+                return;
             }
+            
+            reportTitle = 'Rapport Journalier des Paiements';
+            reportPeriod = `Date: ${new Date(reportDate).toLocaleDateString('fr-FR')}`;
+            
+            const startDate = new Date(reportDate);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 1);
+            
+            const paymentsSnap = await getDocs(query(
+                collection(db, 'payments'), 
+                where('validatedAt', '>=', startDate),
+                where('validatedAt', '<', endDate)
+            ));
+            
+            reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+        } else if (reportType === 'monthly') {
+            if (!reportMonth) {
+                showAlert("Veuillez sélectionner un mois", "error");
+                return;
+            }
+            
+            reportTitle = 'Rapport Mensuel des Paiements';
+            reportPeriod = `Mois: ${reportMonth}`;
+            
+            const paymentsSnap = await getDocs(query(collection(db, 'payments'), where('month', '==', reportMonth)));
+            reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+        } else if (reportType === 'yearly') {
+            reportTitle = 'Rapport Annuel des Paiements';
+            reportPeriod = `Année: ${reportYear}`;
+            
+            const startDate = new Date(reportYear, 0, 1);
+            const endDate = new Date(parseInt(reportYear) + 1, 0, 1);
+            
+            const paymentsSnap = await getDocs(query(
+                collection(db, 'payments'), 
+                where('validatedAt', '>=', startDate),
+                where('validatedAt', '<', endDate)
+            ));
+            
+            reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+        } else if (reportType === 'fees') {
+            if (!reportMonth) {
+                showAlert("Veuillez sélectionner un mois", "error");
+                return;
+            }
+            
+            reportTitle = 'Rapport par Type de Frais';
+            reportPeriod = `Mois: ${reportMonth}`;
+            
+            const paymentsSnap = await getDocs(query(collection(db, 'payments'), where('month', '==', reportMonth)));
+            reportData = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Afficher le breakdown par type de frais
+            document.getElementById('fees-breakdown-section').classList.remove('hidden');
+            
+        } else if (reportType === 'enrollment') {
+            if (!reportDate) {
+                showAlert("Veuillez sélectionner une date", "error");
+                return;
+            }
+            
+            reportTitle = 'Rapport des Inscriptions';
+            reportPeriod = `Date: ${new Date(reportDate).toLocaleDateString('fr-FR')}`;
+            
+            const startDate = new Date(reportDate);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 1);
+            
+            // Récupérer les inscriptions de la journée - NOUVELLE APPROCHE
+            let enrollments = [];
+            
+            // Élèves secondaires - récupérer tous puis filtrer localement
+            const secondarySnap = await getDocs(query(
+                collection(db, 'students'), 
+                where('createdAt', '>=', startDate),
+                where('createdAt', '<', endDate)
+            ));
+            secondarySnap.forEach(doc => {
+                const data = doc.data();
+                // Filtrer par status localement
+                if (data.status !== 'deleted') {
+                    enrollments.push({ ...data, type: 'secondary' });
+                }
+            });
+            
+            // Élèves primaires
+            const primarySnap = await getDocs(query(
+                collection(db, 'primary_students'), 
+                where('createdAt', '>=', startDate),
+                where('createdAt', '<', endDate)
+            ));
+            primarySnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    enrollments.push({ ...data, type: 'primary' });
+                }
+            });
+            
+            // Élèves maternelles
+            const kindergartenSnap = await getDocs(query(
+                collection(db, 'kindergarten_students'), 
+                where('createdAt', '>=', startDate),
+                where('createdAt', '<', endDate)
+            ));
+            kindergartenSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status !== 'deleted') {
+                    enrollments.push({ ...data, type: 'kindergarten' });
+                }
+            });
+            
+            reportData = enrollments;
+            
+            // Afficher la section des inscriptions
+            document.getElementById('enrollment-report-section').classList.remove('hidden');
+            document.getElementById('general-summary').classList.add('hidden');
+            
+        } else if (reportType === 'payments-class') {
+            if (!reportMonth || !reportClass) {
+                showAlert("Veuillez sélectionner un mois et une classe", "error");
+                return;
+            }
+            
+            reportTitle = `Rapport des Paiements - Classe ${reportClass}`;
+            reportPeriod = `Mois: ${reportMonth}`;
+            
+            // Récupérer les paiements pour le mois spécifié - NOUVELLE APPROCHE
+            let paymentsQuery = query(collection(db, 'payments'), where('month', '==', reportMonth));
+            
+            if (reportFeesType && reportFeesType !== 'all') {
+                paymentsQuery = query(paymentsQuery, where('paymentType', '==', reportFeesType));
+            }
+            
+            const paymentsSnap = await getDocs(paymentsQuery);
+            
+            // Filtrer par classe localement
+            reportData = paymentsSnap.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(payment => {
+                    // Vérifier si l'élève appartient à la classe sélectionnée
+                    return payment.studentClass === reportClass;
+                });
+            
+            // Afficher la section spécifique pour le rapport par classe
+            document.getElementById('class-payments-section').classList.remove('hidden');
         }
+        
+        // Générer le rapport
+        await generateReportContent(reportData, reportType, reportTitle, reportPeriod, reportClass, reportMonth);
+        
+        // Afficher le contenu du rapport
+        document.getElementById('report-content').classList.remove('hidden');
+        document.getElementById('back-report-btn').style.display = 'block';
+        
+    } catch (error) {
+        console.error("Erreur génération rapport:", error);
+        showAlert('Erreur lors de la génération du rapport: ' + error.message, 'error');
+    }
+}
 
         async function generateReportContent(data, reportType, title, period, className = '', month = '') {
             // Mettre à jour le titre et la période
@@ -6856,77 +6824,84 @@ loadClassesIntoSelects();
 
         // Fonction pour afficher les détails d'une classe
         window.viewClassDetails = async (className, classType) => {
-            try {
-                let students = [];
-                
-                if (classType === 'secondary') {
-                    const studentsSnap = await getDocs(query(collection(db, 'students'), where('class', '==', className), where('status', '!=', 'deleted')));
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push(data);
-                    });
-                } else if (classType === 'primary') {
-                    const studentsSnap = await getDocs(query(collection(db, 'primary_students'), where('class', '==', className), where('status', '!=', 'deleted')));
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push(data);
-                    });
-                } else {
-                    const studentsSnap = await getDocs(query(collection(db, 'kindergarten_students'), where('class', '==', className), where('status', '!=', 'deleted')));
-                    studentsSnap.forEach(doc => {
-                        const data = doc.data();
-                        students.push(data);
-                    });
+    try {
+        let students = [];
+        
+        // NOUVELLE APPROCHE : Récupérer tous puis filtrer localement
+        if (classType === 'secondary') {
+            const studentsSnap = await getDocs(collection(db, 'students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.class === className && data.status !== 'deleted') {
+                    students.push(data);
                 }
-
-                const modalContent = document.getElementById('student-details-content');
-                const typeText = classType === 'secondary' ? 'Secondaire' : 
-                               classType === 'primary' ? 'Primaire' : 'Maternelle';
-                
-                let studentsHTML = '';
-                if (students.length > 0) {
-                    studentsHTML = '<div style="max-height: 300px; overflow-y: auto;">';
-                    students.forEach(student => {
-                        studentsHTML += `
-                            <div style="padding: 10px; border-bottom: 1px solid #eee; margin-bottom: 5px;">
-                                <strong>${student.fullName}</strong><br>
-                                <small>Matricule: ${student.matricule} | Date naissance: ${student.birthdate}</small>
-                            </div>
-                        `;
-                    });
-                    studentsHTML += '</div>';
-                } else {
-                    studentsHTML = '<p>Aucun élève dans cette classe</p>';
+            });
+        } else if (classType === 'primary') {
+            const studentsSnap = await getDocs(collection(db, 'primary_students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.class === className && data.status !== 'deleted') {
+                    students.push(data);
                 }
+            });
+        } else {
+            const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.class === className && data.status !== 'deleted') {
+                    students.push(data);
+                }
+            });
+        }
 
-                modalContent.innerHTML = `
-                    <div class="student-details">
-                        <div class="detail-item">
-                            <label>Classe</label>
-                            <p>${className}</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>Type</label>
-                            <p>${typeText}</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>Nombre d'élèves</label>
-                            <p>${students.length}</p>
-                        </div>
-                        <div class="detail-item">
-                            <label>Liste des élèves</label>
-                            ${studentsHTML}
-                        </div>
+        const modalContent = document.getElementById('student-details-content');
+        const typeText = classType === 'secondary' ? 'Secondaire' : 
+                       classType === 'primary' ? 'Primaire' : 'Maternelle';
+        
+        let studentsHTML = '';
+        if (students.length > 0) {
+            studentsHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+            students.forEach(student => {
+                studentsHTML += `
+                    <div style="padding: 10px; border-bottom: 1px solid #eee; margin-bottom: 5px;">
+                        <strong>${student.fullName}</strong><br>
+                        <small>Matricule: ${student.matricule} | Date naissance: ${student.birthdate}</small>
                     </div>
                 `;
+            });
+            studentsHTML += '</div>';
+        } else {
+            studentsHTML = '<p>Aucun élève dans cette classe</p>';
+        }
 
-                document.getElementById('student-details-modal').classList.remove('hidden');
+        modalContent.innerHTML = `
+            <div class="student-details">
+                <div class="detail-item">
+                    <label>Classe</label>
+                    <p>${className}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Type</label>
+                    <p>${typeText}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Nombre d'élèves</label>
+                    <p>${students.length}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Liste des élèves</label>
+                    ${studentsHTML}
+                </div>
+            </div>
+        `;
 
-            } catch (error) {
-                console.error("Erreur affichage détails classe:", error);
-                showAlert("Erreur lors du chargement des détails", "error");
-            }
-        };
+        document.getElementById('student-details-modal').classList.remove('hidden');
+
+    } catch (error) {
+        console.error("Erreur affichage détails classe:", error);
+        showAlert("Erreur lors du chargement des détails", "error");
+    }
+};
 
         // Génération de reçu
         async function generateReceipt(studentName, months, amount, paymentCode, studentClass, paymentType) {
