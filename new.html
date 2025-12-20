@@ -1,0 +1,3592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapports Généraux - CS la Colombe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="TheoVêt">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="TheoVêt">
+    <meta name="description" content="Rapports généraux - CS la Colombe">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#3498db">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="theme-color" content="#3498db">
+
+    <!-- Styles et Bibliothèques -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #3498db; --secondary: #2c3e50; --success: #27ae60;
+            --danger: #e74c3c; --warning: #f39c12; --info: #1abc9c;
+            --light: #ecf0f1; --dark: #34495e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            width: 100px;
+            height: auto;
+        }
+        
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-5px);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #eee;
+            padding: 0 30px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .tab {
+            padding: 20px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: var(--dark);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .tab:hover {
+            background: #f8f9fa;
+            color: var(--primary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            background: #f8f9fa;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .report-controls {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group h4 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #219955;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #1a252f;
+            transform: translateY(-2px);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .report-content {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: none;
+        }
+        
+        .report-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .report-title {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .report-period {
+            color: var(--dark);
+            font-weight: 500;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 50px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border-top: 5px solid var(--primary);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.success {
+            border-color: var(--success);
+        }
+        
+        .stat-card.warning {
+            border-color: var(--warning);
+        }
+        
+        .stat-card.danger {
+            border-color: var(--danger);
+        }
+        
+        .stat-card.info {
+            border-color: var(--info);
+        }
+        
+        .stat-card h3 {
+            font-size: 2.5rem;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+        
+        .stat-card.success h3 {
+            color: var(--success);
+        }
+        
+        .stat-card.warning h3 {
+            color: var(--warning);
+        }
+        
+        .stat-card.danger h3 {
+            color: var(--danger);
+        }
+        
+        .stat-card.info h3 {
+            color: var(--info);
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .currency {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #eee;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .chart-container {
+            margin: 40px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            font-size: 1.3rem;
+        }
+        
+        .signature-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+        
+        .signature-box {
+            text-align: center;
+            width: 45%;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 60px;
+            width: 200px;
+            display: inline-block;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--primary);
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: row;
+                padding: 0;
+                overflow-x: auto;
+            }
+            
+            .tab {
+                padding: 15px;
+                border-bottom: 1px solid #eee;
+                font-size: 14px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                min-width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .signature-area {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .signature-box {
+                width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo {
+                width: 80px;
+                right: 15px;
+                top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <i class="fas fa-arrow-left"></i>
+                Retour au Portail
+            </button>
+            <img src="R.png" alt="Logo CS la Colombe" class="logo">
+            <h1><i class="fas fa-chart-bar"></i> Rapports Généraux</h1>
+            <p>Générez et exportez tous vos rapports administratifs</p>
+        </div>
+
+        <!-- Navigation par onglets -->
+        <div class="nav-tabs">
+            <div class="tab active" data-tab="inscription">
+                <i class="fas fa-user-plus"></i>
+                Rapport d'Inscription
+            </div>
+            <div class="tab" data-tab="paiement-classe">
+                <i class="fas fa-money-bill-wave"></i>
+                Paiements par Classe
+            </div>
+            <div class="tab" data-tab="statistiques">
+                <i class="fas fa-chart-pie"></i>
+                Statistiques Globales
+            </div>
+            <div class="tab" data-tab="journalier">
+                <i class="fas fa-calendar-day"></i>
+                Rapport Journalier
+            </div>
+            <div class="tab" data-tab="mensuel">
+                <i class="fas fa-calendar-alt"></i>
+                Rapport Mensuel
+            </div>
+        </div>
+
+        <!-- Contenu des onglets -->
+        <div class="content">
+            <!-- Onglet 1: Rapport d'Inscription -->
+            <div id="inscription-tab" class="tab-content active">
+                <div class="report-controls">
+                    <div class="control-group">
+                        <h4><i class="fas fa-cog"></i> Paramètres du Rapport</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-filter"></i> Type de Rapport</label>
+                                <select id="inscription-type" class="form-control">
+                                    <option value="daily">Par Jour</option>
+                                    <option value="monthly">Par Mois</option>
+                                    <option value="yearly">Par Année</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar"></i> Date</label>
+                                <input type="date" id="inscription-date" class="form-control">
+                            </div>
+                            <div class="form-group" id="inscription-month-group" style="display: none;">
+                                <label><i class="fas fa-calendar"></i> Mois</label>
+                                <select id="inscription-month" class="form-control">
+                                    <option value="janvier">Janvier</option>
+                                    <option value="février">Février</option>
+                                    <option value="mars">Mars</option>
+                                    <option value="avril">Avril</option>
+                                    <option value="mai">Mai</option>
+                                    <option value="juin">Juin</option>
+                                    <option value="juillet">Juillet</option>
+                                    <option value="août">Août</option>
+                                    <option value="septembre">Septembre</option>
+                                    <option value="octobre">Octobre</option>
+                                    <option value="novembre">Novembre</option>
+                                    <option value="décembre">Décembre</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="inscription-year-group" style="display: none;">
+                                <label><i class="fas fa-calendar-alt"></i> Année</label>
+                                <select id="inscription-year" class="form-control">
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-school"></i> Type d'Élève</label>
+                                <select id="inscription-student-type" class="form-control">
+                                    <option value="all">Tous les types</option>
+                                    <option value="secondary">Secondaire</option>
+                                    <option value="primary">Primaire</option>
+                                    <option value="kindergarten">Maternelle</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="generate-inscription-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Générer le Rapport
+                        </button>
+                        <button id="export-inscription-pdf" class="btn btn-success" disabled>
+                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        </button>
+                        <button id="export-inscription-excel" class="btn btn-success" disabled>
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultats du rapport d'inscription -->
+                <div id="inscription-results" class="report-content"></div>
+            </div>
+
+            <!-- Onglet 2: Paiements par Classe -->
+            <div id="paiement-classe-tab" class="tab-content">
+                <div class="report-controls">
+                    <div class="control-group">
+                        <h4><i class="fas fa-cog"></i> Paramètres du Rapport</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-filter"></i> Période</label>
+                                <select id="paiement-period" class="form-control">
+                                    <option value="daily">Journalier</option>
+                                    <option value="monthly">Mensuel</option>
+                                    <option value="yearly">Annuel</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar"></i> Date</label>
+                                <input type="date" id="paiement-date" class="form-control">
+                            </div>
+                            <div class="form-group" id="paiement-month-group" style="display: none;">
+                                <label><i class="fas fa-calendar"></i> Mois</label>
+                                <select id="paiement-month" class="form-control">
+                                    <option value="janvier">Janvier</option>
+                                    <option value="février">Février</option>
+                                    <option value="mars">Mars</option>
+                                    <option value="avril">Avril</option>
+                                    <option value="mai">Mai</option>
+                                    <option value="juin">Juin</option>
+                                    <option value="juillet">Juillet</option>
+                                    <option value="août">Août</option>
+                                    <option value="septembre">Septembre</option>
+                                    <option value="octobre">Octobre</option>
+                                    <option value="novembre">Novembre</option>
+                                    <option value="décembre">Décembre</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="paiement-year-group" style="display: none;">
+                                <label><i class="fas fa-calendar-alt"></i> Année</label>
+                                <select id="paiement-year" class="form-control">
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-money-bill-wave"></i> Type de Frais</label>
+                                <select id="paiement-fees-type" class="form-control">
+                                    <option value="all">Tous les frais</option>
+                                    <option value="Frais scolaires">Frais scolaires</option>
+                                    <option value="Frais de l'état">Frais de l'état</option>
+                                    <option value="visite">visite</option>
+                                    <option value="achat pull">achat pull</option>
+                                    <option value="Autres">Autres</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-school"></i> Classe</label>
+                                <select id="paiement-class" class="form-control">
+                                    <option value="">Toutes les classes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="generate-paiement-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Générer le Rapport
+                        </button>
+                        <button id="export-paiement-pdf" class="btn btn-success" disabled>
+                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        </button>
+                        <button id="export-paiement-excel" class="btn btn-success" disabled>
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultats du rapport de paiement -->
+                <div id="paiement-results" class="report-content"></div>
+            </div>
+
+            <!-- Onglet 3: Statistiques Globales -->
+            <div id="statistiques-tab" class="tab-content">
+                <div class="report-controls">
+                    <div class="control-group">
+                        <h4><i class="fas fa-cog"></i> Paramètres du Rapport</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-filter"></i> Type de Rapport</label>
+                                <select id="stats-type" class="form-control">
+                                    <option value="global">Statistiques Globales</option>
+                                    <option value="par-classe">Par Classe</option>
+                                    <option value="par-niveau">Par Niveau</option>
+                                    <option value="evolution">Évolution Mensuelle</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar-alt"></i> Année</label>
+                                <select id="stats-year" class="form-control">
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-school"></i> Type d'Élève</label>
+                                <select id="stats-student-type" class="form-control">
+                                    <option value="all">Tous les types</option>
+                                    <option value="secondary">Secondaire</option>
+                                    <option value="primary">Primaire</option>
+                                    <option value="kindergarten">Maternelle</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="generate-stats-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Générer le Rapport
+                        </button>
+                        <button id="export-stats-pdf" class="btn btn-success" disabled>
+                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        </button>
+                        <button id="export-stats-excel" class="btn btn-success" disabled>
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultats des statistiques -->
+                <div id="stats-results" class="report-content"></div>
+            </div>
+
+            <!-- Onglet 4: Rapport Journalier -->
+            <div id="journalier-tab" class="tab-content">
+                <div class="report-controls">
+                    <div class="control-group">
+                        <h4><i class="fas fa-cog"></i> Paramètres du Rapport</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar"></i> Date</label>
+                                <input type="date" id="journalier-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-school"></i> Type d'Élève</label>
+                                <select id="journalier-student-type" class="form-control">
+                                    <option value="all">Tous les types</option>
+                                    <option value="secondary">Secondaire</option>
+                                    <option value="primary">Primaire</option>
+                                    <option value="kindergarten">Maternelle</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="generate-journalier-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Générer le Rapport
+                        </button>
+                        <button id="export-journalier-pdf" class="btn btn-success" disabled>
+                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        </button>
+                        <button id="export-journalier-excel" class="btn btn-success" disabled>
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultats du rapport journalier -->
+                <div id="journalier-results" class="report-content"></div>
+            </div>
+
+            <!-- Onglet 5: Rapport Mensuel -->
+            <div id="mensuel-tab" class="tab-content">
+                <div class="report-controls">
+                    <div class="control-group">
+                        <h4><i class="fas fa-cog"></i> Paramètres du Rapport</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar"></i> Mois</label>
+                                <select id="mensuel-month" class="form-control">
+                                    <option value="janvier">Janvier</option>
+                                    <option value="février">Février</option>
+                                    <option value="mars">Mars</option>
+                                    <option value="avril">Avril</option>
+                                    <option value="mai">Mai</option>
+                                    <option value="juin">Juin</option>
+                                    <option value="juillet">Juillet</option>
+                                    <option value="août">Août</option>
+                                    <option value="septembre">Septembre</option>
+                                    <option value="octobre">Octobre</option>
+                                    <option value="novembre">Novembre</option>
+                                    <option value="décembre">Décembre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar-alt"></i> Année</label>
+                                <select id="mensuel-year" class="form-control">
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-school"></i> Type d'Élève</label>
+                                <select id="mensuel-student-type" class="form-control">
+                                    <option value="all">Tous les types</option>
+                                    <option value="secondary">Secondaire</option>
+                                    <option value="primary">Primaire</option>
+                                    <option value="kindergarten">Maternelle</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="generate-mensuel-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Générer le Rapport
+                        </button>
+                        <button id="export-mensuel-pdf" class="btn btn-success" disabled>
+                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        </button>
+                        <button id="export-mensuel-excel" class="btn btn-success" disabled>
+                            <i class="fas fa-file-excel"></i> Exporter Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Résultats du rapport mensuel -->
+                <div id="mensuel-results" class="report-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs, 
+            query, 
+            where, 
+            orderBy 
+        } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBn7VIddclO7KtrXb5sibCr9SjVLjOy-qI",
+            authDomain: "theo1d.firebaseapp.com",
+            projectId: "theo1d",
+            storageBucket: "theo1d.firebasestorage.app",
+            messagingSenderId: "269629842962",
+            appId: "1:269629842962:web:a80a12b04448fe1e595acb",
+            measurementId: "G-TNSG1XFMDZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Variables globales
+        let currentReportData = null;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuration des onglets
+            setupTabs();
+            
+            // Configuration des sélecteurs de période
+            setupPeriodSelectors();
+            
+            // Charger la liste des classes
+            loadClassesList();
+            
+            // Initialiser les dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inscription-date').value = today;
+            document.getElementById('paiement-date').value = today;
+            document.getElementById('journalier-date').value = today;
+            
+            // Afficher le mois actuel dans les sélecteurs
+            const monthNames = [
+                'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+            ];
+            const currentMonth = monthNames[new Date().getMonth()];
+            document.getElementById('inscription-month').value = currentMonth;
+            document.getElementById('paiement-month').value = currentMonth;
+            document.getElementById('mensuel-month').value = currentMonth;
+            
+            // Afficher l'année actuelle
+            const currentYear = new Date().getFullYear();
+            document.getElementById('inscription-year').value = currentYear;
+            document.getElementById('paiement-year').value = currentYear;
+            document.getElementById('mensuel-year').value = currentYear;
+            document.getElementById('stats-year').value = currentYear;
+            
+            console.log("Module de rapports initialisé avec succès");
+        });
+
+        // Configuration des onglets
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Désactiver tous les onglets
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Activer l'onglet courant
+                    tab.classList.add('active');
+                    const tabId = tab.dataset.tab + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Réinitialiser les résultats
+                    resetReportResults(tab.dataset.tab);
+                });
+            });
+        }
+
+        // Configuration des sélecteurs de période
+        function setupPeriodSelectors() {
+            // Rapport d'inscription
+            const inscriptionType = document.getElementById('inscription-type');
+            const inscriptionDate = document.getElementById('inscription-date').parentElement;
+            const inscriptionMonth = document.getElementById('inscription-month-group');
+            const inscriptionYear = document.getElementById('inscription-year-group');
+            
+            inscriptionType.addEventListener('change', function() {
+                inscriptionDate.style.display = 'none';
+                inscriptionMonth.style.display = 'none';
+                inscriptionYear.style.display = 'none';
+                
+                if (this.value === 'daily') {
+                    inscriptionDate.style.display = 'block';
+                } else if (this.value === 'monthly') {
+                    inscriptionMonth.style.display = 'block';
+                } else if (this.value === 'yearly') {
+                    inscriptionYear.style.display = 'block';
+                }
+            });
+            
+            // Rapport de paiement
+            const paiementPeriod = document.getElementById('paiement-period');
+            const paiementDate = document.getElementById('paiement-date').parentElement;
+            const paiementMonth = document.getElementById('paiement-month-group');
+            const paiementYear = document.getElementById('paiement-year-group');
+            
+            paiementPeriod.addEventListener('change', function() {
+                paiementDate.style.display = 'none';
+                paiementMonth.style.display = 'none';
+                paiementYear.style.display = 'none';
+                
+                if (this.value === 'daily') {
+                    paiementDate.style.display = 'block';
+                } else if (this.value === 'monthly') {
+                    paiementMonth.style.display = 'block';
+                } else if (this.value === 'yearly') {
+                    paiementYear.style.display = 'block';
+                }
+            });
+            
+            // Initialiser les affichages
+            inscriptionType.dispatchEvent(new Event('change'));
+            paiementPeriod.dispatchEvent(new Event('change'));
+        }
+
+        // Charger la liste des classes
+        async function loadClassesList() {
+            try {
+                const paiementClassSelect = document.getElementById('paiement-class');
+                
+                // Récupérer les classes secondaires
+                const secondaryClassesSnap = await getDocs(collection(db, 'classes'));
+                secondaryClassesSnap.forEach(doc => {
+                    const data = doc.data();
+                    paiementClassSelect.innerHTML += `<option value="secondary:${data.name}">${data.name} (Secondaire)</option>`;
+                });
+                
+                // Récupérer les classes primaires
+                const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
+                primaryClassesSnap.forEach(doc => {
+                    const data = doc.data();
+                    paiementClassSelect.innerHTML += `<option value="primary:${data.name}">${data.name} (Primaire)</option>`;
+                });
+                
+                // Récupérer les classes maternelles
+                const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+                kindergartenClassesSnap.forEach(doc => {
+                    const data = doc.data();
+                    paiementClassSelect.innerHTML += `<option value="kindergarten:${data.name}">${data.name} (Maternelle)</option>`;
+                });
+                
+            } catch (error) {
+                console.error('Erreur chargement classes:', error);
+            }
+        }
+
+        // Réinitialiser les résultats
+        function resetReportResults(tab) {
+            const resultsId = tab + '-results';
+            const resultsDiv = document.getElementById(resultsId);
+            if (resultsDiv) {
+                resultsDiv.classList.remove('active');
+                resultsDiv.innerHTML = '';
+            }
+            
+            // Désactiver les boutons d'export
+            const exportPdfBtn = document.getElementById('export-' + tab + '-pdf');
+            const exportExcelBtn = document.getElementById('export-' + tab + '-excel');
+            if (exportPdfBtn) exportPdfBtn.disabled = true;
+            if (exportExcelBtn) exportExcelBtn.disabled = true;
+            
+            currentReportData = null;
+        }
+
+        // Gestionnaire du rapport d'inscription
+        document.getElementById('generate-inscription-btn').addEventListener('click', async function() {
+            await generateInscriptionReport();
+        });
+
+        async function generateInscriptionReport() {
+            const reportType = document.getElementById('inscription-type').value;
+            const studentType = document.getElementById('inscription-student-type').value;
+            
+            let periodText = '';
+            let queryDate = null;
+            
+            if (reportType === 'daily') {
+                const date = document.getElementById('inscription-date').value;
+                periodText = `Date: ${new Date(date).toLocaleDateString('fr-FR')}`;
+                queryDate = new Date(date);
+            } else if (reportType === 'monthly') {
+                const month = document.getElementById('inscription-month').value;
+                periodText = `Mois: ${month}`;
+            } else if (reportType === 'yearly') {
+                const year = document.getElementById('inscription-year').value;
+                periodText = `Année: ${year}`;
+            }
+            
+            // Afficher le chargement
+            const resultsDiv = document.getElementById('inscription-results');
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Génération du rapport en cours...</div>';
+            resultsDiv.classList.add('active');
+            
+            try {
+                let inscriptions = [];
+                
+                // Récupérer les inscriptions selon le type d'élève
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const studentsSnap = await getDocs(collection(db, 'students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted') {
+                            // Filtrer selon la période
+                            if (filterByPeriod(data.createdAt, reportType, queryDate)) {
+                                inscriptions.push({
+                                    ...data,
+                                    type: 'secondary',
+                                    docId: doc.id
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'primary') {
+                    const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted') {
+                            if (filterByPeriod(data.createdAt, reportType, queryDate)) {
+                                inscriptions.push({
+                                    ...data,
+                                    type: 'primary',
+                                    docId: doc.id
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted') {
+                            if (filterByPeriod(data.createdAt, reportType, queryDate)) {
+                                inscriptions.push({
+                                    ...data,
+                                    type: 'kindergarten',
+                                    docId: doc.id
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                // Grouper les inscriptions par classe
+                const inscriptionsByClass = {};
+                inscriptions.forEach(inscription => {
+                    const className = inscription.class;
+                    const classType = inscription.type;
+                    const classKey = `${classType}:${className}`;
+                    
+                    if (!inscriptionsByClass[classKey]) {
+                        inscriptionsByClass[classKey] = {
+                            className: className,
+                            type: classType === 'secondary' ? 'Secondaire' : 
+                                   classType === 'primary' ? 'Primaire' : 'Maternelle',
+                            count: 0,
+                            totalFees: 0,
+                            students: []
+                        };
+                    }
+                    
+                    inscriptionsByClass[classKey].count++;
+                    inscriptionsByClass[classKey].totalFees += inscription.enrollmentFees || 0;
+                    inscriptionsByClass[classKey].students.push(inscription);
+                });
+                
+                // Calculer les totaux
+                const totalInscriptions = inscriptions.length;
+                const totalFees = inscriptions.reduce((sum, insc) => sum + (insc.enrollmentFees || 0), 0);
+                const classDetails = Object.values(inscriptionsByClass);
+                
+                // Générer le rapport HTML
+                const reportHTML = generateInscriptionReportHTML(periodText, totalInscriptions, totalFees, classDetails);
+                resultsDiv.innerHTML = reportHTML;
+                
+                // Stocker les données pour l'export
+                currentReportData = {
+                    type: 'inscription',
+                    period: periodText,
+                    studentType: studentType,
+                    totalInscriptions: totalInscriptions,
+                    totalFees: totalFees,
+                    classDetails: classDetails,
+                    inscriptions: inscriptions
+                };
+                
+                // Activer les boutons d'export
+                document.getElementById('export-inscription-pdf').disabled = false;
+                document.getElementById('export-inscription-excel').disabled = false;
+                
+            } catch (error) {
+                console.error('Erreur génération rapport:', error);
+                resultsDiv.innerHTML = '<div class="no-data alert alert-error">Erreur lors de la génération du rapport: ' + error.message + '</div>';
+            }
+        }
+
+        // Filtrer par période
+        function filterByPeriod(timestamp, periodType, queryDate) {
+            if (!timestamp) return false;
+            
+            try {
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                
+                if (periodType === 'daily') {
+                    if (!queryDate) return false;
+                    return date.toDateString() === queryDate.toDateString();
+                } else if (periodType === 'monthly') {
+                    const monthNames = [
+                        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                    ];
+                    const monthName = monthNames[date.getMonth()];
+                    const selectedMonth = document.getElementById('inscription-month').value;
+                    return monthName === selectedMonth;
+                } else if (periodType === 'yearly') {
+                    const year = date.getFullYear();
+                    const selectedYear = parseInt(document.getElementById('inscription-year').value);
+                    return year === selectedYear;
+                }
+            } catch (error) {
+                console.error('Erreur filtre période:', error);
+                return false;
+            }
+            
+            return false;
+        }
+
+        // Générer le HTML du rapport d'inscription
+        function generateInscriptionReportHTML(periodText, totalInscriptions, totalFees, classDetails) {
+            const today = new Date().toLocaleDateString('fr-FR');
+            
+            let html = `
+                <div class="report-header">
+                    <div class="report-title">
+                        <i class="fas fa-user-plus"></i>
+                        Rapport d'Inscription des Élèves
+                    </div>
+                    <div class="report-period">${periodText}</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <i class="fas fa-users fa-2x"></i>
+                        <h3>${totalInscriptions}</h3>
+                        <p>Total des inscriptions</p>
+                    </div>
+                    <div class="stat-card info">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                        <h3 class="currency">$${totalFees.toFixed(2)}</h3>
+                        <p>Total frais d'inscription</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-school fa-2x"></i>
+                        <h3>${classDetails.length}</h3>
+                        <p>Nombre de classes concernées</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calculator fa-2x"></i>
+                        <h3 class="currency">$${(totalInscriptions > 0 ? (totalFees / totalInscriptions).toFixed(2) : '0.00')}</h3>
+                        <p>Moyenne par élève</p>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type Classe</th>
+                                <th>Classe</th>
+                                <th>Type de Frais</th>
+                                <th>Montant d'Inscription</th>
+                                <th>Validé par</th>
+                                <th>Montant Total Classe</th>
+                                <th>Nombre d'Élèves</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            if (classDetails.length === 0) {
+                html += `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-info-circle" style="color: #666; margin-right: 10px;"></i>
+                            Aucune inscription trouvée pour la période sélectionnée
+                        </td>
+                    </tr>
+                `;
+            } else {
+                classDetails.forEach(classDetail => {
+                    const avgFees = classDetail.count > 0 ? classDetail.totalFees / classDetail.count : 0;
+                    
+                    html += `
+                        <tr>
+                            <td>${today}</td>
+                            <td><span class="badge ${classDetail.type === 'Secondaire' ? 'badge-success' : classDetail.type === 'Primaire' ? 'badge-info' : 'badge-warning'}">${classDetail.type}</span></td>
+                            <td>${classDetail.className}</td>
+                            <td>Frais d'inscription</td>
+                            <td class="currency">$${avgFees.toFixed(2)}</td>
+                            <td>Secrétariat</td>
+                            <td class="currency">$${classDetail.totalFees.toFixed(2)}</td>
+                            <td><strong>${classDetail.count}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        <tr style="background: #f8f9fa;">
+                            <td colspan="6"><strong>TOTAL GÉNÉRAL</strong></td>
+                            <td class="currency"><strong>$${totalFees.toFixed(2)}</strong></td>
+                            <td><strong>${totalInscriptions}</strong></td>
+                        </tr>
+                `;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="signature-area">
+                    <div class="signature-box">
+                        <p>Le Secrétaire</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>Le Directeur</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // Gestionnaire du rapport de paiement par classe
+        document.getElementById('generate-paiement-btn').addEventListener('click', async function() {
+            await generatePaiementReport();
+        });
+
+        async function generatePaiementReport() {
+            const periodType = document.getElementById('paiement-period').value;
+            const feesType = document.getElementById('paiement-fees-type').value;
+            const classFilter = document.getElementById('paiement-class').value;
+            
+            let periodText = '';
+            let queryDate = null;
+            
+            if (periodType === 'daily') {
+                const date = document.getElementById('paiement-date').value;
+                periodText = `Date: ${new Date(date).toLocaleDateString('fr-FR')}`;
+                queryDate = new Date(date);
+            } else if (periodType === 'monthly') {
+                const month = document.getElementById('paiement-month').value;
+                periodText = `Mois: ${month}`;
+            } else if (periodType === 'yearly') {
+                const year = document.getElementById('paiement-year').value;
+                periodText = `Année: ${year}`;
+            }
+            
+            // Afficher le chargement
+            const resultsDiv = document.getElementById('paiement-results');
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Génération du rapport en cours...</div>';
+            resultsDiv.classList.add('active');
+            
+            try {
+                // Récupérer tous les paiements
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                const allPayments = paymentsSnap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Filtrer les paiements selon les critères
+                const filteredPayments = allPayments.filter(payment => {
+                    // Filtrer par période
+                    if (!filterPaymentByPeriod(payment, periodType, queryDate)) return false;
+                    
+                    // Filtrer par type de frais
+                    if (feesType !== 'all' && payment.paymentType !== feesType) return false;
+                    
+                    // Filtrer par classe si spécifié
+                    if (classFilter) {
+                        const [classType, className] = classFilter.split(':');
+                        if (payment.studentType !== classType || payment.studentClass !== className) return false;
+                    }
+                    
+                    return true;
+                });
+                
+                // Grouper les paiements par classe
+                const paymentsByClass = {};
+                filteredPayments.forEach(payment => {
+                    const classKey = `${payment.studentType}:${payment.studentClass}`;
+                    if (!paymentsByClass[classKey]) {
+                        const typeText = payment.studentType === 'secondary' ? 'Secondaire' : 
+                                       payment.studentType === 'primary' ? 'Primaire' : 'Maternelle';
+                        
+                        paymentsByClass[classKey] = {
+                            className: payment.studentClass,
+                            type: typeText,
+                            totalAmount: 0,
+                            paymentCount: 0,
+                            studentCount: new Set(),
+                            payments: []
+                        };
+                    }
+                    
+                    paymentsByClass[classKey].totalAmount += payment.amount || 0;
+                    paymentsByClass[classKey].paymentCount++;
+                    paymentsByClass[classKey].studentCount.add(payment.studentId);
+                    paymentsByClass[classKey].payments.push(payment);
+                });
+                
+                // Récupérer les totaux d'élèves par classe
+                const classStats = await getClassStudentCounts();
+                
+                // Calculer les statistiques
+                const classDetails = [];
+                let totalPayments = 0;
+                let totalAmount = 0;
+                let totalPaidStudents = 0;
+                let totalStudents = 0;
+                
+                for (const [classKey, stats] of Object.entries(paymentsByClass)) {
+                    const totalInClass = classStats[classKey] || 0;
+                    const paidStudents = stats.studentCount.size;
+                    const unpaidStudents = totalInClass - paidStudents;
+                    const paymentRate = totalInClass > 0 ? (paidStudents / totalInClass) * 100 : 0;
+                    
+                    classDetails.push({
+                        className: stats.className,
+                        type: stats.type,
+                        totalStudents: totalInClass,
+                        paidStudents: paidStudents,
+                        unpaidStudents: unpaidStudents,
+                        paymentRate: paymentRate,
+                        totalAmount: stats.totalAmount,
+                        paymentCount: stats.paymentCount
+                    });
+                    
+                    totalPayments += stats.paymentCount;
+                    totalAmount += stats.totalAmount;
+                    totalPaidStudents += paidStudents;
+                    totalStudents += totalInClass;
+                }
+                
+                // Calculer le taux de paiement global
+                const globalPaymentRate = totalStudents > 0 ? (totalPaidStudents / totalStudents) * 100 : 0;
+                
+                // Générer le rapport HTML
+                const reportHTML = generatePaiementReportHTML(periodText, feesType, classFilter, totalPayments, totalAmount, totalPaidStudents, totalStudents, globalPaymentRate, classDetails);
+                resultsDiv.innerHTML = reportHTML;
+                
+                // Stocker les données pour l'export
+                currentReportData = {
+                    type: 'paiement',
+                    period: periodText,
+                    feesType: feesType,
+                    classFilter: classFilter,
+                    totalPayments: totalPayments,
+                    totalAmount: totalAmount,
+                    totalPaidStudents: totalPaidStudents,
+                    totalStudents: totalStudents,
+                    globalPaymentRate: globalPaymentRate,
+                    classDetails: classDetails,
+                    payments: filteredPayments
+                };
+                
+                // Activer les boutons d'export
+                document.getElementById('export-paiement-pdf').disabled = false;
+                document.getElementById('export-paiement-excel').disabled = false;
+                
+            } catch (error) {
+                console.error('Erreur génération rapport paiement:', error);
+                resultsDiv.innerHTML = '<div class="no-data alert alert-error">Erreur lors de la génération du rapport: ' + error.message + '</div>';
+            }
+        }
+
+        // Filtrer les paiements par période
+        function filterPaymentByPeriod(payment, periodType, queryDate) {
+            if (!payment.validatedAt) return false;
+            
+            try {
+                const date = payment.validatedAt.toDate ? payment.validatedAt.toDate() : new Date(payment.validatedAt);
+                
+                if (periodType === 'daily') {
+                    if (!queryDate) return false;
+                    return date.toDateString() === queryDate.toDateString();
+                } else if (periodType === 'monthly') {
+                    const monthNames = [
+                        'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                        'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                    ];
+                    const monthName = monthNames[date.getMonth()];
+                    const selectedMonth = document.getElementById('paiement-month').value;
+                    return monthName === selectedMonth;
+                } else if (periodType === 'yearly') {
+                    const year = date.getFullYear();
+                    const selectedYear = parseInt(document.getElementById('paiement-year').value);
+                    return year === selectedYear;
+                }
+            } catch (error) {
+                console.error('Erreur filtre paiement période:', error);
+                return false;
+            }
+            
+            return false;
+        }
+
+        // Obtenir les totaux d'élèves par classe
+        async function getClassStudentCounts() {
+            const classStats = {};
+            
+            try {
+                // Élèves secondaires
+                const secondarySnap = await getDocs(collection(db, 'students'));
+                secondarySnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status !== 'deleted' && data.class) {
+                        const classKey = `secondary:${data.class}`;
+                        classStats[classKey] = (classStats[classKey] || 0) + 1;
+                    }
+                });
+                
+                // Élèves primaires
+                const primarySnap = await getDocs(collection(db, 'primary_students'));
+                primarySnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status !== 'deleted' && data.class) {
+                        const classKey = `primary:${data.class}`;
+                        classStats[classKey] = (classStats[classKey] || 0) + 1;
+                    }
+                });
+                
+                // Élèves maternelles
+                const kindergartenSnap = await getDocs(collection(db, 'kindergarten_students'));
+                kindergartenSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status !== 'deleted' && data.class) {
+                        const classKey = `kindergarten:${data.class}`;
+                        classStats[classKey] = (classStats[classKey] || 0) + 1;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Erreur récupération statistiques classes:', error);
+            }
+            
+            return classStats;
+        }
+
+        // Générer le HTML du rapport de paiement
+        function generatePaiementReportHTML(periodText, feesType, classFilter, totalPayments, totalAmount, totalPaidStudents, totalStudents, globalPaymentRate, classDetails) {
+            const today = new Date().toLocaleDateString('fr-FR');
+            const filterText = classFilter ? `Classe: ${classFilter.split(':')[1]}` : 'Toutes les classes';
+            const feesTypeText = feesType === 'all' ? 'Tous les frais' : feesType;
+            
+            let html = `
+                <div class="report-header">
+                    <div class="report-title">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Rapport des Paiements par Classe
+                    </div>
+                    <div class="report-period">${periodText} | ${feesTypeText} | ${filterText}</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                        <h3 class="currency">$${totalAmount.toFixed(2)}</h3>
+                        <p>Montant total collecté</p>
+                    </div>
+                    <div class="stat-card info">
+                        <i class="fas fa-users fa-2x"></i>
+                        <h3>${totalPaidStudents}/${totalStudents}</h3>
+                        <p>Élèves en ordre / Total</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-percentage fa-2x"></i>
+                        <h3>${globalPaymentRate.toFixed(1)}%</h3>
+                        <p>Taux de paiement global</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calculator fa-2x"></i>
+                        <h3 class="currency">$${(totalPayments > 0 ? (totalAmount / totalPayments).toFixed(2) : '0.00')}</h3>
+                        <p>Moyenne par transaction</p>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Classe</th>
+                                <th>Type</th>
+                                <th>Total Élèves</th>
+                                <th>Élèves en ordre</th>
+                                <th>Élèves non payés</th>
+                                <th>Taux de paiement</th>
+                                <th>Nombre de transactions</th>
+                                <th>Montant Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            if (classDetails.length === 0) {
+                html += `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-info-circle" style="color: #666; margin-right: 10px;"></i>
+                            Aucun paiement trouvé pour les critères sélectionnés
+                        </td>
+                    </tr>
+                `;
+            } else {
+                classDetails.forEach(classDetail => {
+                    const paymentRateColor = classDetail.paymentRate >= 80 ? 'badge-success' : 
+                                           classDetail.paymentRate >= 50 ? 'badge-warning' : 'badge-danger';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${classDetail.className}</strong></td>
+                            <td><span class="badge ${classDetail.type === 'Secondaire' ? 'badge-success' : classDetail.type === 'Primaire' ? 'badge-info' : 'badge-warning'}">${classDetail.type}</span></td>
+                            <td>${classDetail.totalStudents}</td>
+                            <td><span class="badge badge-success">${classDetail.paidStudents}</span></td>
+                            <td><span class="badge badge-danger">${classDetail.unpaidStudents}</span></td>
+                            <td><span class="badge ${paymentRateColor}">${classDetail.paymentRate.toFixed(1)}%</span></td>
+                            <td>${classDetail.paymentCount}</td>
+                            <td class="currency"><strong>$${classDetail.totalAmount.toFixed(2)}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                const totalUnpaid = totalStudents - totalPaidStudents;
+                
+                html += `
+                        <tr style="background: #f8f9fa; font-weight: bold;">
+                            <td colspan="2"><strong>TOTAL GÉNÉRAL</strong></td>
+                            <td>${totalStudents}</td>
+                            <td><span class="badge badge-success">${totalPaidStudents}</span></td>
+                            <td><span class="badge badge-danger">${totalUnpaid}</span></td>
+                            <td><span class="badge ${globalPaymentRate >= 80 ? 'badge-success' : globalPaymentRate >= 50 ? 'badge-warning' : 'badge-danger'}">${globalPaymentRate.toFixed(1)}%</span></td>
+                            <td>${totalPayments}</td>
+                            <td class="currency"><strong>$${totalAmount.toFixed(2)}</strong></td>
+                        </tr>
+                `;
+            }
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="signature-area">
+                    <div class="signature-box">
+                        <p>Le Secrétaire</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>Le Directeur</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // Gestionnaire du rapport de statistiques
+        document.getElementById('generate-stats-btn').addEventListener('click', async function() {
+            await generateStatsReport();
+        });
+
+        async function generateStatsReport() {
+            const statsType = document.getElementById('stats-type').value;
+            const year = document.getElementById('stats-year').value;
+            const studentType = document.getElementById('stats-student-type').value;
+            
+            // Afficher le chargement
+            const resultsDiv = document.getElementById('stats-results');
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Génération des statistiques en cours...</div>';
+            resultsDiv.classList.add('active');
+            
+            try {
+                let reportHTML = '';
+                
+                if (statsType === 'global') {
+                    reportHTML = await generateGlobalStatsReport(year, studentType);
+                } else if (statsType === 'par-classe') {
+                    reportHTML = await generateStatsByClassReport(year, studentType);
+                } else if (statsType === 'par-niveau') {
+                    reportHTML = await generateStatsByLevelReport(year, studentType);
+                } else if (statsType === 'evolution') {
+                    reportHTML = await generateMonthlyEvolutionReport(year, studentType);
+                }
+                
+                resultsDiv.innerHTML = reportHTML;
+                
+                // Stocker les données pour l'export
+                currentReportData = {
+                    type: 'statistiques',
+                    statsType: statsType,
+                    year: year,
+                    studentType: studentType
+                };
+                
+                // Activer les boutons d'export
+                document.getElementById('export-stats-pdf').disabled = false;
+                document.getElementById('export-stats-excel').disabled = false;
+                
+            } catch (error) {
+                console.error('Erreur génération statistiques:', error);
+                resultsDiv.innerHTML = '<div class="no-data alert alert-error">Erreur lors de la génération des statistiques: ' + error.message + '</div>';
+            }
+        }
+
+        // Statistiques par classe
+        async function generateStatsByClassReport(year, studentType) {
+            try {
+                // Récupérer les données des classes
+                let classStats = [];
+                
+                // Classes secondaires
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const classesSnap = await getDocs(collection(db, 'classes'));
+                    for (const doc of classesSnap.docs) {
+                        const classData = doc.data();
+                        const className = classData.name;
+                        
+                        // Compter les élèves dans cette classe
+                        let studentCount = 0;
+                        const studentsSnap = await getDocs(collection(db, 'students'));
+                        studentsSnap.forEach(studentDoc => {
+                            const studentData = studentDoc.data();
+                            if (studentData.class === className && studentData.status !== 'deleted') {
+                                studentCount++;
+                            }
+                        });
+                        
+                        // Compter les paiements pour cette classe
+                        let paymentCount = 0;
+                        let totalAmount = 0;
+                        const paymentsSnap = await getDocs(collection(db, 'payments'));
+                        paymentsSnap.forEach(paymentDoc => {
+                            const paymentData = paymentDoc.data();
+                            if (paymentData.studentClass === className && paymentData.studentType === 'secondary') {
+                                const paymentYear = paymentData.validatedAt ? paymentData.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                                if (paymentYear == year) {
+                                    paymentCount++;
+                                    totalAmount += paymentData.amount || 0;
+                                }
+                            }
+                        });
+                        
+                        classStats.push({
+                            name: className,
+                            type: 'Secondaire',
+                            level: classData.level || 'N/A',
+                            capacity: classData.capacity || 'N/A',
+                            studentCount: studentCount,
+                            paymentCount: paymentCount,
+                            totalAmount: totalAmount
+                        });
+                    }
+                }
+                
+                // Classes primaires
+                if (studentType === 'all' || studentType === 'primary') {
+                    const classesSnap = await getDocs(collection(db, 'primary_classes'));
+                    for (const doc of classesSnap.docs) {
+                        const classData = doc.data();
+                        const className = classData.name;
+                        
+                        // Compter les élèves dans cette classe
+                        let studentCount = 0;
+                        const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                        studentsSnap.forEach(studentDoc => {
+                            const studentData = studentDoc.data();
+                            if (studentData.class === className && studentData.status !== 'deleted') {
+                                studentCount++;
+                            }
+                        });
+                        
+                        // Compter les paiements pour cette classe
+                        let paymentCount = 0;
+                        let totalAmount = 0;
+                        const paymentsSnap = await getDocs(collection(db, 'payments'));
+                        paymentsSnap.forEach(paymentDoc => {
+                            const paymentData = paymentDoc.data();
+                            if (paymentData.studentClass === className && paymentData.studentType === 'primary') {
+                                const paymentYear = paymentData.validatedAt ? paymentData.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                                if (paymentYear == year) {
+                                    paymentCount++;
+                                    totalAmount += paymentData.amount || 0;
+                                }
+                            }
+                        });
+                        
+                        classStats.push({
+                            name: className,
+                            type: 'Primaire',
+                            level: classData.level || 'N/A',
+                            capacity: classData.capacity || 'N/A',
+                            studentCount: studentCount,
+                            paymentCount: paymentCount,
+                            totalAmount: totalAmount
+                        });
+                    }
+                }
+                
+                // Classes maternelles
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const classesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+                    for (const doc of classesSnap.docs) {
+                        const classData = doc.data();
+                        const className = classData.name;
+                        
+                        // Compter les élèves dans cette classe
+                        let studentCount = 0;
+                        const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                        studentsSnap.forEach(studentDoc => {
+                            const studentData = studentDoc.data();
+                            if (studentData.class === className && studentData.status !== 'deleted') {
+                                studentCount++;
+                            }
+                        });
+                        
+                        // Compter les paiements pour cette classe
+                        let paymentCount = 0;
+                        let totalAmount = 0;
+                        const paymentsSnap = await getDocs(collection(db, 'payments'));
+                        paymentsSnap.forEach(paymentDoc => {
+                            const paymentData = paymentDoc.data();
+                            if (paymentData.studentClass === className && paymentData.studentType === 'kindergarten') {
+                                const paymentYear = paymentData.validatedAt ? paymentData.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                                if (paymentYear == year) {
+                                    paymentCount++;
+                                    totalAmount += paymentData.amount || 0;
+                                }
+                            }
+                        });
+                        
+                        classStats.push({
+                            name: className,
+                            type: 'Maternelle',
+                            level: classData.level || 'N/A',
+                            capacity: classData.capacity || 'N/A',
+                            studentCount: studentCount,
+                            paymentCount: paymentCount,
+                            totalAmount: totalAmount
+                        });
+                    }
+                }
+                
+                // Calculer les totaux
+                const totalStudents = classStats.reduce((sum, cls) => sum + cls.studentCount, 0);
+                const totalPayments = classStats.reduce((sum, cls) => sum + cls.paymentCount, 0);
+                const totalAmount = classStats.reduce((sum, cls) => sum + cls.totalAmount, 0);
+                
+                const periodText = `Année scolaire: ${year}`;
+                
+                let html = `
+                    <div class="report-header">
+                        <div class="report-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Statistiques par Classe
+                        </div>
+                        <div class="report-period">${periodText}</div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card success">
+                            <i class="fas fa-users fa-2x"></i>
+                            <h3>${classStats.length}</h3>
+                            <p>Nombre de classes</p>
+                        </div>
+                        <div class="stat-card info">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                            <h3>${totalStudents}</h3>
+                            <p>Total des élèves</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                            <h3>${totalPayments}</h3>
+                            <p>Transactions</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-cash-register fa-2x"></i>
+                            <h3 class="currency">$${totalAmount.toFixed(2)}</h3>
+                            <p>Montant collecté</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Type</th>
+                                    <th>Niveau</th>
+                                    <th>Capacité</th>
+                                    <th>Élèves inscrits</th>
+                                    <th>Transactions</th>
+                                    <th>Montant collecté</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                if (classStats.length === 0) {
+                    html += `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-info-circle" style="color: #666; margin-right: 10px;"></i>
+                                Aucune donnée de classe trouvée
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    classStats.forEach(cls => {
+                        const typeClass = cls.type === 'Secondaire' ? 'badge-success' : 
+                                        cls.type === 'Primaire' ? 'badge-info' : 'badge-warning';
+                        
+                        html += `
+                            <tr>
+                                <td><strong>${cls.name}</strong></td>
+                                <td><span class="badge ${typeClass}">${cls.type}</span></td>
+                                <td>${cls.level}</td>
+                                <td>${cls.capacity}</td>
+                                <td>${cls.studentCount}</td>
+                                <td>${cls.paymentCount}</td>
+                                <td class="currency">$${cls.totalAmount.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            <tr style="background: #f8f9fa; font-weight: bold;">
+                                <td colspan="4"><strong>TOTAL</strong></td>
+                                <td>${totalStudents}</td>
+                                <td>${totalPayments}</td>
+                                <td class="currency"><strong>$${totalAmount.toFixed(2)}</strong></td>
+                            </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="signature-area">
+                        <div class="signature-box">
+                            <p>Le Secrétaire</p>
+                            <div class="signature-line"></div>
+                        </div>
+                        <div class="signature-box">
+                            <p>Le Directeur</p>
+                            <div class="signature-line"></div>
+                        </div>
+                    </div>
+                `;
+                
+                return html;
+                
+            } catch (error) {
+                console.error('Erreur statistiques par classe:', error);
+                return '<div class="no-data alert alert-error">Erreur lors de la génération des statistiques par classe</div>';
+            }
+        }
+
+        // Statistiques par niveau
+        async function generateStatsByLevelReport(year, studentType) {
+            try {
+                // Définir les niveaux
+                const levels = {
+                    'secondary': ['6ème', '5ème', '4ème', '3ème', '2nde', '1ère', 'Tle'],
+                    'primary': ['CP', 'CE1', 'CE2', 'CM1', 'CM2'],
+                    'kindergarten': ['PS', 'MS', 'GS']
+                };
+                
+                const levelStats = {};
+                
+                // Compter les élèves par niveau pour chaque type
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const studentsSnap = await getDocs(collection(db, 'students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.class) {
+                            // Extraire le niveau de la classe
+                            const className = data.class;
+                            let level = 'Autre';
+                            
+                            for (const [levelName, patterns] of Object.entries(levels)) {
+                                if (levelName === 'secondary') {
+                                    for (const pattern of patterns) {
+                                        if (className.includes(pattern)) {
+                                            level = pattern;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            const key = `secondary_${level}`;
+                            if (!levelStats[key]) {
+                                levelStats[key] = {
+                                    type: 'Secondaire',
+                                    level: level,
+                                    studentCount: 0,
+                                    paymentCount: 0,
+                                    totalAmount: 0
+                                };
+                            }
+                            levelStats[key].studentCount++;
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'primary') {
+                    const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.class) {
+                            const className = data.class;
+                            let level = 'Autre';
+                            
+                            for (const pattern of levels.primary) {
+                                if (className.includes(pattern)) {
+                                    level = pattern;
+                                    break;
+                                }
+                            }
+                            
+                            const key = `primary_${level}`;
+                            if (!levelStats[key]) {
+                                levelStats[key] = {
+                                    type: 'Primaire',
+                                    level: level,
+                                    studentCount: 0,
+                                    paymentCount: 0,
+                                    totalAmount: 0
+                                };
+                            }
+                            levelStats[key].studentCount++;
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.class) {
+                            const className = data.class;
+                            let level = 'Autre';
+                            
+                            for (const pattern of levels.kindergarten) {
+                                if (className.includes(pattern)) {
+                                    level = pattern;
+                                    break;
+                                }
+                            }
+                            
+                            const key = `kindergarten_${level}`;
+                            if (!levelStats[key]) {
+                                levelStats[key] = {
+                                    type: 'Maternelle',
+                                    level: level,
+                                    studentCount: 0,
+                                    paymentCount: 0,
+                                    totalAmount: 0
+                                };
+                            }
+                            levelStats[key].studentCount++;
+                        }
+                    });
+                }
+                
+                // Compter les paiements par niveau
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    const paymentYear = data.validatedAt ? data.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                    
+                    if (paymentYear == year) {
+                        const className = data.studentClass;
+                        let level = 'Autre';
+                        
+                        // Déterminer le niveau
+                        if (data.studentType === 'secondary') {
+                            for (const pattern of levels.secondary) {
+                                if (className.includes(pattern)) {
+                                    level = pattern;
+                                    break;
+                                }
+                            }
+                        } else if (data.studentType === 'primary') {
+                            for (const pattern of levels.primary) {
+                                if (className.includes(pattern)) {
+                                    level = pattern;
+                                    break;
+                                }
+                            }
+                        } else if (data.studentType === 'kindergarten') {
+                            for (const pattern of levels.kindergarten) {
+                                if (className.includes(pattern)) {
+                                    level = pattern;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const key = `${data.studentType}_${level}`;
+                        if (levelStats[key]) {
+                            levelStats[key].paymentCount++;
+                            levelStats[key].totalAmount += data.amount || 0;
+                        }
+                    }
+                });
+                
+                const levelStatsArray = Object.values(levelStats);
+                const totalStudents = levelStatsArray.reduce((sum, lvl) => sum + lvl.studentCount, 0);
+                const totalPayments = levelStatsArray.reduce((sum, lvl) => sum + lvl.paymentCount, 0);
+                const totalAmount = levelStatsArray.reduce((sum, lvl) => sum + lvl.totalAmount, 0);
+                
+                const periodText = `Année scolaire: ${year}`;
+                
+                let html = `
+                    <div class="report-header">
+                        <div class="report-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Statistiques par Niveau
+                        </div>
+                        <div class="report-period">${periodText}</div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card success">
+                            <i class="fas fa-layer-group fa-2x"></i>
+                            <h3>${levelStatsArray.length}</h3>
+                            <p>Niveaux analysés</p>
+                        </div>
+                        <div class="stat-card info">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                            <h3>${totalStudents}</h3>
+                            <p>Total des élèves</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                            <h3>${totalPayments}</h3>
+                            <p>Transactions</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-cash-register fa-2x"></i>
+                            <h3 class="currency">$${totalAmount.toFixed(2)}</h3>
+                            <p>Montant collecté</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Niveau</th>
+                                    <th>Nombre d'élèves</th>
+                                    <th>Transactions</th>
+                                    <th>Montant collecté</th>
+                                    <th>Moyenne par élève</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                if (levelStatsArray.length === 0) {
+                    html += `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-info-circle" style="color: #666; margin-right: 10px;"></i>
+                                Aucune donnée de niveau trouvée
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    levelStatsArray.sort((a, b) => {
+                        if (a.type === b.type) return a.level.localeCompare(b.level);
+                        return a.type.localeCompare(b.type);
+                    });
+                    
+                    levelStatsArray.forEach(lvl => {
+                        const typeClass = lvl.type === 'Secondaire' ? 'badge-success' : 
+                                        lvl.type === 'Primaire' ? 'badge-info' : 'badge-warning';
+                        const avgPerStudent = lvl.studentCount > 0 ? lvl.totalAmount / lvl.studentCount : 0;
+                        
+                        html += `
+                            <tr>
+                                <td><span class="badge ${typeClass}">${lvl.type}</span></td>
+                                <td><strong>${lvl.level}</strong></td>
+                                <td>${lvl.studentCount}</td>
+                                <td>${lvl.paymentCount}</td>
+                                <td class="currency">$${lvl.totalAmount.toFixed(2)}</td>
+                                <td class="currency">$${avgPerStudent.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            <tr style="background: #f8f9fa; font-weight: bold;">
+                                <td colspan="2"><strong>TOTAL</strong></td>
+                                <td>${totalStudents}</td>
+                                <td>${totalPayments}</td>
+                                <td class="currency"><strong>$${totalAmount.toFixed(2)}</strong></td>
+                                <td class="currency"><strong>$${(totalStudents > 0 ? totalAmount / totalStudents : 0).toFixed(2)}</strong></td>
+                            </tr>
+                    `;
+                }
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="signature-area">
+                        <div class="signature-box">
+                            <p>Le Secrétaire</p>
+                            <div class="signature-line"></div>
+                        </div>
+                        <div class="signature-box">
+                            <p>Le Directeur</p>
+                            <div class="signature-line"></div>
+                        </div>
+                    </div>
+                `;
+                
+                return html;
+                
+            } catch (error) {
+                console.error('Erreur statistiques par niveau:', error);
+                return '<div class="no-data alert alert-error">Erreur lors de la génération des statistiques par niveau</div>';
+            }
+        }
+
+        // Évolution mensuelle
+        async function generateMonthlyEvolutionReport(year, studentType) {
+            try {
+                const months = [
+                    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                ];
+                
+                const monthlyStats = {};
+                months.forEach(month => {
+                    monthlyStats[month] = {
+                        inscriptions: 0,
+                        payments: 0,
+                        amount: 0
+                    };
+                });
+                
+                // Compter les inscriptions par mois
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const studentsSnap = await getDocs(collection(db, 'students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.createdAt) {
+                            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (date.getFullYear() == year) {
+                                const monthIndex = date.getMonth();
+                                const monthName = months[monthIndex];
+                                monthlyStats[monthName].inscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'primary') {
+                    const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.createdAt) {
+                            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (date.getFullYear() == year) {
+                                const monthIndex = date.getMonth();
+                                const monthName = months[monthIndex];
+                                monthlyStats[monthName].inscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.status !== 'deleted' && data.createdAt) {
+                            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (date.getFullYear() == year) {
+                                const monthIndex = date.getMonth();
+                                const monthName = months[monthIndex];
+                                monthlyStats[monthName].inscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                // Compter les paiements par mois
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.validatedAt) {
+                        const date = data.validatedAt.toDate ? data.validatedAt.toDate() : new Date(data.validatedAt);
+                        if (date.getFullYear() == year) {
+                            if (studentType === 'all' || data.studentType === studentType) {
+                                const monthIndex = date.getMonth();
+                                const monthName = months[monthIndex];
+                                monthlyStats[monthName].payments++;
+                                monthlyStats[monthName].amount += data.amount || 0;
+                            }
+                        }
+                    }
+                });
+                
+                // Calculer les totaux
+                const totalInscriptions = Object.values(monthlyStats).reduce((sum, month) => sum + month.inscriptions, 0);
+                const totalPayments = Object.values(monthlyStats).reduce((sum, month) => sum + month.payments, 0);
+                const totalAmount = Object.values(monthlyStats).reduce((sum, month) => sum + month.amount, 0);
+                
+                const periodText = `Année scolaire: ${year}`;
+                
+                let html = `
+                    <div class="report-header">
+                        <div class="report-title">
+                            <i class="fas fa-chart-line"></i>
+                            Évolution Mensuelle des Activités
+                        </div>
+                        <div class="report-period">${periodText}</div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card success">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                            <h3>${totalInscriptions}</h3>
+                            <p>Total inscriptions</p>
+                        </div>
+                        <div class="stat-card info">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                            <h3>${totalPayments}</h3>
+                            <p>Total transactions</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <i class="fas fa-cash-register fa-2x"></i>
+                            <h3 class="currency">$${totalAmount.toFixed(2)}</h3>
+                            <p>Montant total</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-bar fa-2x"></i>
+                            <h3>${Object.values(monthlyStats).filter(m => m.inscriptions > 0 || m.payments > 0).length}</h3>
+                            <p>Mois actifs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mois</th>
+                                    <th>Inscriptions</th>
+                                    <th>Transactions</th>
+                                    <th>Montant collecté</th>
+                                    <th>Moyenne par transaction</th>
+                                    <th>Tendance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                months.forEach(month => {
+                    const stats = monthlyStats[month];
+                    const avgPayment = stats.payments > 0 ? stats.amount / stats.payments : 0;
+                    
+                    // Déterminer la tendance
+                    let trend = '';
+                    let trendClass = '';
+                    if (stats.inscriptions > 0 || stats.payments > 0) {
+                        if (stats.payments > 5 && stats.amount > 1000) {
+                            trend = 'Forte';
+                            trendClass = 'badge-success';
+                        } else if (stats.payments > 0) {
+                            trend = 'Normale';
+                            trendClass = 'badge-info';
+                        } else if (stats.inscriptions > 0) {
+                            trend = 'Inscriptions';
+                            trendClass = 'badge-warning';
+                        } else {
+                            trend = 'Faible';
+                            trendClass = 'badge-danger';
+                        }
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${month}</strong></td>
+                            <td>${stats.inscriptions}</td>
+                            <td>${stats.payments}</td>
+                            <td class="currency">$${stats.amount.toFixed(2)}</td>
+                            <td class="currency">$${avgPayment.toFixed(2)}</td>
+                            <td><span class="badge ${trendClass}">${trend}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        <tr style="background: #f8f9fa; font-weight: bold;">
+                            <td><strong>TOTAL ANNÉE</strong></td>
+                            <td>${totalInscriptions}</td>
+                            <td>${totalPayments}</td>
+                            <td class="currency"><strong>$${totalAmount.toFixed(2)}</strong></td>
+                            <td class="currency"><strong>$${(totalPayments > 0 ? totalAmount / totalPayments : 0).toFixed(2)}</strong></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Évolution des inscriptions et paiements</div>
+                <canvas id="evolutionChart" height="100"></canvas>
+            </div>
+            
+            <div class="signature-area">
+                <div class="signature-box">
+                    <p>Le Secrétaire</p>
+                    <div class="signature-line"></div>
+                </div>
+                <div class="signature-box">
+                    <p>Le Directeur</p>
+                    <div class="signature-line"></div>
+                </div>
+            </div>
+                `;
+                
+                return html;
+                
+            } catch (error) {
+                console.error('Erreur évolution mensuelle:', error);
+                return '<div class="no-data alert alert-error">Erreur lors de la génération de l\'évolution mensuelle</div>';
+            }
+        }
+
+        // Statistiques globales
+        async function generateGlobalStatsReport(year, studentType) {
+            // Récupérer les données
+            const totalStudents = await getTotalStudents(studentType);
+            const totalTeachers = await getTotalTeachers(studentType);
+            const totalClasses = await getTotalClasses(studentType);
+            const totalPayments = await getTotalPayments(year, studentType);
+            const totalAmount = await getTotalAmount(year, studentType);
+            
+            // Répartition par type d'élève
+            const secondaryCount = studentType === 'all' || studentType === 'secondary' ? await getTotalStudents('secondary') : 0;
+            const primaryCount = studentType === 'all' || studentType === 'primary' ? await getTotalStudents('primary') : 0;
+            const kindergartenCount = studentType === 'all' || studentType === 'kindergarten' ? await getTotalStudents('kindergarten') : 0;
+            
+            const periodText = `Année scolaire: ${year}`;
+            
+            return `
+                <div class="report-header">
+                    <div class="report-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Statistiques Globales - CS la Colombe
+                    </div>
+                    <div class="report-period">${periodText}</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <i class="fas fa-users fa-2x"></i>
+                        <h3>${totalStudents}</h3>
+                        <p>Total des élèves</p>
+                    </div>
+                    <div class="stat-card info">
+                        <i class="fas fa-user-tie fa-2x"></i>
+                        <h3>${totalTeachers}</h3>
+                        <p>Total des enseignants</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-school fa-2x"></i>
+                        <h3>${totalClasses}</h3>
+                        <p>Total des classes</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                        <h3 class="currency">$${totalAmount.toFixed(2)}</h3>
+                        <p>Total collecté</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-chart-pie"></i> Répartition par type d'élève
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong>Secondaire:</strong> ${secondaryCount} élèves
+                            <div style="height: 10px; background: #eee; border-radius: 5px; margin-top: 5px;">
+                                <div style="height: 100%; width: ${totalStudents > 0 ? (secondaryCount / totalStudents * 100) : 0}%; background: var(--success); border-radius: 5px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <strong>Primaire:</strong> ${primaryCount} élèves
+                            <div style="height: 10px; background: #eee; border-radius: 5px; margin-top: 5px;">
+                                <div style="height: 100%; width: ${totalStudents > 0 ? (primaryCount / totalStudents * 100) : 0}%; background: var(--info); border-radius: 5px;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <strong>Maternelle:</strong> ${kindergartenCount} élèves
+                            <div style="height: 10px; background: #eee; border-radius: 5px; margin-top: 5px;">
+                                <div style="height: 100%; width: ${totalStudents > 0 ? (kindergartenCount / totalStudents * 100) : 0}%; background: var(--warning); border-radius: 5px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-percentage"></i> Indicateurs de performance
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong>Taux d'occupation des classes:</strong> 
+                            ${totalClasses > 0 ? (totalStudents / (totalClasses * 30) * 100).toFixed(1) : 0}%
+                        </div>
+                        <div>
+                            <strong>Ratio élèves/enseignants:</strong> 
+                            ${totalTeachers > 0 ? (totalStudents / totalTeachers).toFixed(1) : 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Revenu moyen par élève:</strong> 
+                            $${totalStudents > 0 ? (totalAmount / totalStudents).toFixed(2) : '0.00'}
+                        </div>
+                        <div>
+                            <strong>Transactions moyennes:</strong> 
+                            $${totalPayments > 0 ? (totalAmount / totalPayments).toFixed(2) : '0.00'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="signature-area">
+                    <div class="signature-box">
+                        <p>Le Secrétaire</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>Le Directeur</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonctions utilitaires pour les statistiques
+        async function getTotalStudents(studentType) {
+            let total = 0;
+            
+            if (studentType === 'all' || studentType === 'secondary') {
+                const snap = await getDocs(collection(db, 'students'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'primary') {
+                const snap = await getDocs(collection(db, 'primary_students'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'kindergarten') {
+                const snap = await getDocs(collection(db, 'kindergarten_students'));
+                total += snap.size;
+            }
+            
+            return total;
+        }
+
+        async function getTotalTeachers(studentType) {
+            let total = 0;
+            
+            if (studentType === 'all' || studentType === 'secondary') {
+                const snap = await getDocs(collection(db, 'teachers'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'primary') {
+                const snap = await getDocs(collection(db, 'primary_teachers'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'kindergarten') {
+                const snap = await getDocs(collection(db, 'kindergarten_teachers'));
+                total += snap.size;
+            }
+            
+            return total;
+        }
+
+        async function getTotalClasses(studentType) {
+            let total = 0;
+            
+            if (studentType === 'all' || studentType === 'secondary') {
+                const snap = await getDocs(collection(db, 'classes'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'primary') {
+                const snap = await getDocs(collection(db, 'primary_classes'));
+                total += snap.size;
+            }
+            
+            if (studentType === 'all' || studentType === 'kindergarten') {
+                const snap = await getDocs(collection(db, 'kindergarten_classes'));
+                total += snap.size;
+            }
+            
+            return total;
+        }
+
+        async function getTotalPayments(year, studentType) {
+            let total = 0;
+            
+            try {
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    const paymentYear = data.validatedAt ? data.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                    
+                    if (paymentYear == year) {
+                        if (studentType === 'all' || data.studentType === studentType) {
+                            total++;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Erreur récupération paiements:', error);
+            }
+            
+            return total;
+        }
+
+        async function getTotalAmount(year, studentType) {
+            let total = 0;
+            
+            try {
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    const paymentYear = data.validatedAt ? data.validatedAt.toDate().getFullYear() : new Date().getFullYear();
+                    
+                    if (paymentYear == year) {
+                        if (studentType === 'all' || data.studentType === studentType) {
+                            total += data.amount || 0;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Erreur récupération montants:', error);
+            }
+            
+            return total;
+        }
+
+        // Gestionnaire du rapport journalier
+        document.getElementById('generate-journalier-btn').addEventListener('click', async function() {
+            await generateDailyReport();
+        });
+
+        async function generateDailyReport() {
+            const date = document.getElementById('journalier-date').value;
+            const studentType = document.getElementById('journalier-student-type').value;
+            
+            const periodText = `Date: ${new Date(date).toLocaleDateString('fr-FR')}`;
+            const queryDate = new Date(date);
+            
+            // Afficher le chargement
+            const resultsDiv = document.getElementById('journalier-results');
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Génération du rapport en cours...</div>';
+            resultsDiv.classList.add('active');
+            
+            try {
+                // Récupérer les inscriptions du jour
+                let dailyInscriptions = 0;
+                let dailyPayments = 0;
+                let dailyAmount = 0;
+                let inscriptionsList = [];
+                let paymentsList = [];
+                
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const studentsSnap = await getDocs(collection(db, 'students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.toDateString() === queryDate.toDateString()) {
+                                dailyInscriptions++;
+                                inscriptionsList.push({
+                                    ...data,
+                                    type: 'secondary'
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'primary') {
+                    const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.toDateString() === queryDate.toDateString()) {
+                                dailyInscriptions++;
+                                inscriptionsList.push({
+                                    ...data,
+                                    type: 'primary'
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.toDateString() === queryDate.toDateString()) {
+                                dailyInscriptions++;
+                                inscriptionsList.push({
+                                    ...data,
+                                    type: 'kindergarten'
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                // Récupérer les paiements du jour
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.validatedAt) {
+                        const paymentDate = data.validatedAt.toDate ? data.validatedAt.toDate() : new Date(data.validatedAt);
+                        if (paymentDate.toDateString() === queryDate.toDateString()) {
+                            if (studentType === 'all' || data.studentType === studentType) {
+                                dailyPayments++;
+                                dailyAmount += data.amount || 0;
+                                paymentsList.push({
+                                    ...data,
+                                    id: doc.id
+                                });
+                            }
+                        }
+                    }
+                });
+                
+                // Générer le rapport HTML
+                const reportHTML = generateDailyReportHTML(periodText, dailyInscriptions, dailyPayments, dailyAmount, inscriptionsList, paymentsList);
+                resultsDiv.innerHTML = reportHTML;
+                
+                // Stocker les données pour l'export
+                currentReportData = {
+                    type: 'journalier',
+                    period: periodText,
+                    date: date,
+                    studentType: studentType,
+                    dailyInscriptions: dailyInscriptions,
+                    dailyPayments: dailyPayments,
+                    dailyAmount: dailyAmount,
+                    inscriptions: inscriptionsList,
+                    payments: paymentsList
+                };
+                
+                // Activer les boutons d'export
+                document.getElementById('export-journalier-pdf').disabled = false;
+                document.getElementById('export-journalier-excel').disabled = false;
+                
+            } catch (error) {
+                console.error('Erreur génération rapport journalier:', error);
+                resultsDiv.innerHTML = '<div class="no-data alert alert-error">Erreur lors de la génération du rapport: ' + error.message + '</div>';
+            }
+        }
+
+        // Générer le HTML du rapport journalier
+        function generateDailyReportHTML(periodText, dailyInscriptions, dailyPayments, dailyAmount, inscriptionsList, paymentsList) {
+            const avgTransaction = dailyPayments > 0 ? dailyAmount / dailyPayments : 0;
+            
+            return `
+                <div class="report-header">
+                    <div class="report-title">
+                        <i class="fas fa-calendar-day"></i>
+                        Rapport Journalier d'Activité
+                    </div>
+                    <div class="report-period">${periodText}</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <i class="fas fa-user-plus fa-2x"></i>
+                        <h3>${dailyInscriptions}</h3>
+                        <p>Nouvelles inscriptions</p>
+                    </div>
+                    <div class="stat-card info">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                        <h3>${dailyPayments}</h3>
+                        <p>Transactions effectuées</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-cash-register fa-2x"></i>
+                        <h3 class="currency">$${dailyAmount.toFixed(2)}</h3>
+                        <p>Montant collecté</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                        <h3 class="currency">$${avgTransaction.toFixed(2)}</h3>
+                        <p>Moyenne par transaction</p>
+                    </div>
+                </div>
+                
+                ${inscriptionsList.length > 0 ? `
+                <div class="table-container" style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-user-plus"></i> Nouvelles inscriptions (${inscriptionsList.length})
+                    </h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Élève</th>
+                                <th>Type</th>
+                                <th>Classe</th>
+                                <th>Matricule</th>
+                                <th>Frais d'inscription</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inscriptionsList.map(insc => `
+                                <tr>
+                                    <td>${insc.fullName}</td>
+                                    <td><span class="badge ${insc.type === 'secondary' ? 'badge-success' : insc.type === 'primary' ? 'badge-info' : 'badge-warning'}">${insc.type === 'secondary' ? 'Secondaire' : insc.type === 'primary' ? 'Primaire' : 'Maternelle'}</span></td>
+                                    <td>${insc.class}</td>
+                                    <td>${insc.matricule}</td>
+                                    <td class="currency">$${(insc.enrollmentFees || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : ''}
+                
+                ${paymentsList.length > 0 ? `
+                <div class="table-container" style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-money-bill-wave"></i> Transactions effectuées (${paymentsList.length})
+                    </h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Élève</th>
+                                <th>Classe</th>
+                                <th>Type de frais</th>
+                                <th>Mois</th>
+                                <th>Montant</th>
+                                <th>Méthode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${paymentsList.map(payment => `
+                                <tr>
+                                    <td>${payment.studentName}</td>
+                                    <td>${payment.studentClass}</td>
+                                    <td>${payment.paymentType}</td>
+                                    <td>${payment.month}</td>
+                                    <td class="currency">$${(payment.amount || 0).toFixed(2)}</td>
+                                    <td>${payment.paymentMethod === 'online' ? 'En ligne' : 'Sur place'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : ''}
+                
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-clipboard-list"></i> Résumé de la journée
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong>Inscriptions:</strong> ${dailyInscriptions} nouvelle(s) inscription(s)
+                        </div>
+                        <div>
+                            <strong>Transactions:</strong> ${dailyPayments} paiement(s) validé(s)
+                        </div>
+                        <div>
+                            <strong>Revenus:</strong> $${dailyAmount.toFixed(2)} collecté(s)
+                        </div>
+                        <div>
+                            <strong>Performance:</strong> ${dailyInscriptions > 0 ? 'Bonne' : 'Normale'} journée
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="signature-area">
+                    <div class="signature-box">
+                        <p>Le Secrétaire</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>Le Directeur</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Gestionnaire du rapport mensuel
+        document.getElementById('generate-mensuel-btn').addEventListener('click', async function() {
+            await generateMonthlyReport();
+        });
+
+        async function generateMonthlyReport() {
+            const month = document.getElementById('mensuel-month').value;
+            const year = document.getElementById('mensuel-year').value;
+            const studentType = document.getElementById('mensuel-student-type').value;
+            
+            const periodText = `Mois: ${month} ${year}`;
+            
+            // Afficher le chargement
+            const resultsDiv = document.getElementById('mensuel-results');
+            resultsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Génération du rapport en cours...</div>';
+            resultsDiv.classList.add('active');
+            
+            try {
+                // Récupérer les inscriptions du mois
+                let monthlyInscriptions = 0;
+                let monthlyPayments = 0;
+                let monthlyAmount = 0;
+                
+                const monthIndex = getMonthIndex(month);
+                
+                if (studentType === 'all' || studentType === 'secondary') {
+                    const studentsSnap = await getDocs(collection(db, 'students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.getMonth() === monthIndex && inscDate.getFullYear() == year) {
+                                monthlyInscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'primary') {
+                    const studentsSnap = await getDocs(collection(db, 'primary_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.getMonth() === monthIndex && inscDate.getFullYear() == year) {
+                                monthlyInscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                if (studentType === 'all' || studentType === 'kindergarten') {
+                    const studentsSnap = await getDocs(collection(db, 'kindergarten_students'));
+                    studentsSnap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt) {
+                            const inscDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                            if (inscDate.getMonth() === monthIndex && inscDate.getFullYear() == year) {
+                                monthlyInscriptions++;
+                            }
+                        }
+                    });
+                }
+                
+                // Récupérer les paiements du mois
+                const paymentsSnap = await getDocs(collection(db, 'payments'));
+                paymentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.validatedAt) {
+                        const paymentDate = data.validatedAt.toDate ? data.validatedAt.toDate() : new Date(data.validatedAt);
+                        if (paymentDate.getMonth() === monthIndex && paymentDate.getFullYear() == year) {
+                            if (studentType === 'all' || data.studentType === studentType) {
+                                monthlyPayments++;
+                                monthlyAmount += data.amount || 0;
+                            }
+                        }
+                    }
+                });
+                
+                // Générer le rapport HTML
+                const reportHTML = generateMonthlyReportHTML(periodText, monthlyInscriptions, monthlyPayments, monthlyAmount);
+                resultsDiv.innerHTML = reportHTML;
+                
+                // Stocker les données pour l'export
+                currentReportData = {
+                    type: 'mensuel',
+                    period: periodText,
+                    month: month,
+                    year: year,
+                    studentType: studentType,
+                    monthlyInscriptions: monthlyInscriptions,
+                    monthlyPayments: monthlyPayments,
+                    monthlyAmount: monthlyAmount
+                };
+                
+                // Activer les boutons d'export
+                document.getElementById('export-mensuel-pdf').disabled = false;
+                document.getElementById('export-mensuel-excel').disabled = false;
+                
+            } catch (error) {
+                console.error('Erreur génération rapport mensuel:', error);
+                resultsDiv.innerHTML = '<div class="no-data alert alert-error">Erreur lors de la génération du rapport: ' + error.message + '</div>';
+            }
+        }
+
+        // Obtenir l'index du mois
+        function getMonthIndex(monthName) {
+            const months = {
+                'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3, 'mai': 4, 'juin': 5,
+                'juillet': 6, 'août': 7, 'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
+            };
+            return months[monthName.toLowerCase()] || 0;
+        }
+
+        // Générer le HTML du rapport mensuel
+        function generateMonthlyReportHTML(periodText, monthlyInscriptions, monthlyPayments, monthlyAmount) {
+            const dailyAverage = monthlyAmount / 30; // Approximation sur 30 jours
+            
+            return `
+                <div class="report-header">
+                    <div class="report-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Rapport Mensuel d'Activité
+                    </div>
+                    <div class="report-period">${periodText}</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card success">
+                        <i class="fas fa-user-plus fa-2x"></i>
+                        <h3>${monthlyInscriptions}</h3>
+                        <p>Nouvelles inscriptions</p>
+                    </div>
+                    <div class="stat-card info">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                        <h3>${monthlyPayments}</h3>
+                        <p>Transactions effectuées</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-cash-register fa-2x"></i>
+                        <h3 class="currency">$${monthlyAmount.toFixed(2)}</h3>
+                        <p>Montant collecté</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                        <h3 class="currency">$${dailyAverage.toFixed(2)}</h3>
+                        <p>Moyenne journalière</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="margin-bottom: 15px; color: var(--secondary);">
+                        <i class="fas fa-clipboard-list"></i> Analyse du mois
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong><i class="fas fa-user-plus"></i> Croissance:</strong> 
+                            ${monthlyInscriptions} nouvelle(s) inscription(s) ce mois
+                        </div>
+                        <div>
+                            <strong><i class="fas fa-money-bill-wave"></i> Transactions:</strong> 
+                            ${monthlyPayments} paiement(s) validé(s)
+                        </div>
+                        <div>
+                            <strong><i class="fas fa-chart-bar"></i> Performance:</strong> 
+                            ${getPerformanceLevel(monthlyInscriptions, monthlyAmount)}
+                        </div>
+                        <div>
+                            <strong><i class="fas fa-bullseye"></i> Objectif:</strong> 
+                            ${getGoalStatus(monthlyInscriptions, monthlyAmount)}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="signature-area">
+                    <div class="signature-box">
+                        <p>Le Secrétaire</p>
+                        <div class="signature-line"></div>
+                    </div>
+                    <div class="signature-box">
+                        <p>Le Directeur</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction utilitaire pour obtenir le niveau de performance
+        function getPerformanceLevel(inscriptions, amount) {
+            if (inscriptions > 50 || amount > 5000) return 'Excellente';
+            if (inscriptions > 25 || amount > 2500) return 'Bonne';
+            if (inscriptions > 10 || amount > 1000) return 'Satisfaisante';
+            return 'À améliorer';
+        }
+
+        // Fonction utilitaire pour obtenir le statut d'objectif
+        function getGoalStatus(inscriptions, amount) {
+            const goalInscriptions = 30;
+            const goalAmount = 3000;
+            
+            const inscriptionsPercent = (inscriptions / goalInscriptions) * 100;
+            const amountPercent = (amount / goalAmount) * 100;
+            
+            return `${Math.min(inscriptionsPercent, 100).toFixed(0)}% inscriptions | ${Math.min(amountPercent, 100).toFixed(0)}% revenus`;
+        }
+
+        // Fonctions d'export PDF
+        document.getElementById('export-inscription-pdf').addEventListener('click', function() {
+            exportToPDF(currentReportData, 'inscription');
+        });
+        
+        document.getElementById('export-paiement-pdf').addEventListener('click', function() {
+            exportToPDF(currentReportData, 'paiement');
+        });
+        
+        document.getElementById('export-stats-pdf').addEventListener('click', function() {
+            exportToPDF(currentReportData, 'statistiques');
+        });
+        
+        document.getElementById('export-journalier-pdf').addEventListener('click', function() {
+            exportToPDF(currentReportData, 'journalier');
+        });
+        
+        document.getElementById('export-mensuel-pdf').addEventListener('click', function() {
+            exportToPDF(currentReportData, 'mensuel');
+        });
+
+        // Fonctions d'export Excel
+        document.getElementById('export-inscription-excel').addEventListener('click', function() {
+            exportToExcel(currentReportData, 'inscription');
+        });
+        
+        document.getElementById('export-paiement-excel').addEventListener('click', function() {
+            exportToExcel(currentReportData, 'paiement');
+        });
+        
+        document.getElementById('export-stats-excel').addEventListener('click', function() {
+            exportToExcel(currentReportData, 'statistiques');
+        });
+        
+        document.getElementById('export-journalier-excel').addEventListener('click', function() {
+            exportToExcel(currentReportData, 'journalier');
+        });
+        
+        document.getElementById('export-mensuel-excel').addEventListener('click', function() {
+            exportToExcel(currentReportData, 'mensuel');
+        });
+
+        // Fonction d'export PDF améliorée
+        function exportToPDF(data, reportType) {
+            if (!data) {
+                alert('Aucune donnée à exporter. Veuillez d\'abord générer un rapport.');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Titre et logo
+            doc.setFontSize(16);
+            doc.setTextColor(52, 152, 219); // Couleur primaire
+            doc.text('Complexe Scolaire la Colombe', 105, 20, { align: 'center' });
+            
+            // Ajouter le logo si disponible
+            try {
+                const logoUrl = 'R.png';
+                // Note: En production, vous devrez convertir l'image en base64
+                // Pour l'exemple, on ajoute un placeholder
+                doc.addImage(logoUrl, 'PNG', 20, 15, 20, 20);
+                doc.addImage(logoUrl, 'PNG', 170, 15, 20, 20);
+            } catch (error) {
+                console.log('Logo non chargé, continuation sans logo');
+            }
+            
+            doc.setFontSize(14);
+            doc.setTextColor(44, 62, 80); // Couleur secondaire
+            let title = '';
+            switch(reportType) {
+                case 'inscription': title = 'Rapport d\'Inscription'; break;
+                case 'paiement': title = 'Rapport des Paiements'; break;
+                case 'statistiques': title = 'Statistiques Globales'; break;
+                case 'journalier': title = 'Rapport Journalier'; break;
+                case 'mensuel': title = 'Rapport Mensuel'; break;
+            }
+            doc.text(title, 105, 35, { align: 'center' });
+            
+            // Informations générales
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            const today = new Date().toLocaleDateString('fr-FR');
+            doc.text(`Généré le: ${today}`, 20, 45);
+            doc.text(`Période: ${data.period || 'Non spécifiée'}`, 20, 52);
+            
+            if (data.studentType && data.studentType !== 'all') {
+                const typeText = data.studentType === 'secondary' ? 'Secondaire' : 
+                               data.studentType === 'primary' ? 'Primaire' : 'Maternelle';
+                doc.text(`Type d\'élève: ${typeText}`, 20, 59);
+            }
+            
+            let yPosition = 70;
+            
+            // Données spécifiques au type de rapport
+            switch(reportType) {
+                case 'inscription':
+                    if (data.totalInscriptions !== undefined) {
+                        doc.setFontSize(12);
+                        doc.setTextColor(52, 152, 219);
+                        doc.text('Résumé des inscriptions', 20, yPosition);
+                        yPosition += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`Total des inscriptions: ${data.totalInscriptions}`, 20, yPosition);
+                        yPosition += 7;
+                        doc.text(`Total frais d'inscription: $${data.totalFees.toFixed(2)}`, 20, yPosition);
+                        yPosition += 7;
+                        doc.text(`Nombre de classes: ${data.classDetails ? data.classDetails.length : 0}`, 20, yPosition);
+                        yPosition += 15;
+                        
+                        // Tableau des classes
+                        if (data.classDetails && data.classDetails.length > 0) {
+                            doc.setFontSize(12);
+                            doc.setTextColor(52, 152, 219);
+                            doc.text('Détail par classe', 20, yPosition);
+                            yPosition += 10;
+                            
+                            const headers = [['Classe', 'Type', 'Nombre', 'Montant']];
+                            const rows = data.classDetails.map(item => [
+                                item.className || 'N/A',
+                                item.type || 'N/A',
+                                item.count ? item.count.toString() : '0',
+                                `$${item.totalFees ? item.totalFees.toFixed(2) : '0.00'}`
+                            ]);
+                            
+                            doc.autoTable({
+                                startY: yPosition,
+                                head: headers,
+                                body: rows,
+                                margin: { left: 20 },
+                                styles: { fontSize: 9 },
+                                headStyles: { 
+                                    fillColor: [52, 152, 219],
+                                    textColor: [255, 255, 255]
+                                },
+                                alternateRowStyles: { fillColor: [245, 245, 245] }
+                            });
+                            
+                            yPosition = doc.lastAutoTable.finalY + 10;
+                        }
+                    }
+                    break;
+                    
+                case 'paiement':
+                    if (data.totalPayments !== undefined) {
+                        doc.setFontSize(12);
+                        doc.setTextColor(52, 152, 219);
+                        doc.text('Résumé des paiements', 20, yPosition);
+                        yPosition += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`Total transactions: ${data.totalPayments}`, 20, yPosition);
+                        yPosition += 7;
+                        doc.text(`Montant total: $${data.totalAmount.toFixed(2)}`, 20, yPosition);
+                        yPosition += 7;
+                        doc.text(`Taux de paiement: ${data.globalPaymentRate ? data.globalPaymentRate.toFixed(1) : '0'}%`, 20, yPosition);
+                        yPosition += 15;
+                        
+                        // Tableau des classes
+                        if (data.classDetails && data.classDetails.length > 0) {
+                            doc.setFontSize(12);
+                            doc.setTextColor(52, 152, 219);
+                            doc.text('Performance par classe', 20, yPosition);
+                            yPosition += 10;
+                            
+                            const headers = [['Classe', 'Type', 'Élèves', 'En ordre', 'Taux', 'Montant']];
+                            const rows = data.classDetails.map(item => [
+                                item.className || 'N/A',
+                                item.type || 'N/A',
+                                item.totalStudents ? item.totalStudents.toString() : '0',
+                                item.paidStudents ? item.paidStudents.toString() : '0',
+                                `${item.paymentRate ? item.paymentRate.toFixed(1) : '0'}%`,
+                                `$${item.totalAmount ? item.totalAmount.toFixed(2) : '0.00'}`
+                            ]);
+                            
+                            doc.autoTable({
+                                startY: yPosition,
+                                head: headers,
+                                body: rows,
+                                margin: { left: 20 },
+                                styles: { fontSize: 9 },
+                                headStyles: { 
+                                    fillColor: [52, 152, 219],
+                                    textColor: [255, 255, 255]
+                                },
+                                alternateRowStyles: { fillColor: [245, 245, 245] },
+                                columnStyles: {
+                                    0: { cellWidth: 35 },
+                                    1: { cellWidth: 25 },
+                                    2: { cellWidth: 20 },
+                                    3: { cellWidth: 20 },
+                                    4: { cellWidth: 25 },
+                                    5: { cellWidth: 35 }
+                                }
+                            });
+                            
+                            yPosition = doc.lastAutoTable.finalY + 10;
+                        }
+                    }
+                    break;
+                    
+                case 'journalier':
+                    doc.setFontSize(12);
+                    doc.setTextColor(52, 152, 219);
+                    doc.text('Résumé journalier', 20, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`Inscriptions: ${data.dailyInscriptions || 0}`, 20, yPosition);
+                    yPosition += 7;
+                    doc.text(`Transactions: ${data.dailyPayments || 0}`, 20, yPosition);
+                    yPosition += 7;
+                    doc.text(`Montant collecté: $${(data.dailyAmount || 0).toFixed(2)}`, 20, yPosition);
+                    break;
+                    
+                case 'mensuel':
+                    doc.setFontSize(12);
+                    doc.setTextColor(52, 152, 219);
+                    doc.text('Résumé mensuel', 20, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`Inscriptions: ${data.monthlyInscriptions || 0}`, 20, yPosition);
+                    yPosition += 7;
+                    doc.text(`Transactions: ${data.monthlyPayments || 0}`, 20, yPosition);
+                    yPosition += 7;
+                    doc.text(`Montant collecté: $${(data.monthlyAmount || 0).toFixed(2)}`, 20, yPosition);
+                    break;
+            }
+            
+            // Signatures
+            doc.setFontSize(10);
+            doc.text('Le Secrétaire', 40, 260);
+            doc.line(40, 265, 90, 265);
+            
+            doc.text('Le Directeur', 120, 260);
+            doc.line(120, 265, 170, 265);
+            
+            // Pied de page
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('Document généré automatiquement - Complexe Scolaire la Colombe', 105, 280, { align: 'center' });
+            
+            // Enregistrer le PDF
+            const filename = `${reportType}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(filename);
+        }
+
+        // Fonction d'export Excel améliorée
+        function exportToExcel(data, reportType) {
+            if (!data) {
+                alert('Aucune donnée à exporter. Veuillez d\'abord générer un rapport.');
+                return;
+            }
+            
+            let worksheetData = [];
+            let filename = '';
+            
+            // En-tête commun
+            worksheetData.push(['COMPLEXE SCOLAIRE LA COLOMBE']);
+            worksheetData.push([`Rapport: ${reportType.toUpperCase()}`]);
+            worksheetData.push([`Période: ${data.period || 'Non spécifiée'}`]);
+            worksheetData.push([`Généré le: ${new Date().toLocaleDateString('fr-FR')}`]);
+            worksheetData.push([]);
+            
+            switch(reportType) {
+                case 'inscription':
+                    filename = `inscriptions_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    
+                    // Statistiques
+                    worksheetData.push(['STATISTIQUES GÉNÉRALES']);
+                    worksheetData.push(['Total des inscriptions', data.totalInscriptions || 0]);
+                    worksheetData.push(['Total frais d\'inscription', `$${(data.totalFees || 0).toFixed(2)}`]);
+                    worksheetData.push(['Nombre de classes', (data.classDetails && data.classDetails.length) || 0]);
+                    worksheetData.push([]);
+                    
+                    // Détail par classe
+                    if (data.classDetails && data.classDetails.length > 0) {
+                        worksheetData.push(['DÉTAIL PAR CLASSE']);
+                        worksheetData.push(['Classe', 'Type', 'Nombre d\'élèves', 'Montant total']);
+                        
+                        data.classDetails.forEach(item => {
+                            worksheetData.push([
+                                item.className || 'N/A',
+                                item.type || 'N/A',
+                                item.count || 0,
+                                `$${(item.totalFees || 0).toFixed(2)}`
+                            ]);
+                        });
+                        
+                        // Total
+                        worksheetData.push([]);
+                        worksheetData.push(['TOTAL', '', data.totalInscriptions || 0, `$${(data.totalFees || 0).toFixed(2)}`]);
+                    }
+                    
+                    // Liste des inscriptions si disponible
+                    if (data.inscriptions && data.inscriptions.length > 0) {
+                        worksheetData.push([]);
+                        worksheetData.push(['LISTE DES INSCRIPTIONS']);
+                        worksheetData.push(['Matricule', 'Nom', 'Type', 'Classe', 'Date naissance', 'Frais inscription']);
+                        
+                        data.inscriptions.forEach(insc => {
+                            worksheetData.push([
+                                insc.matricule || 'N/A',
+                                insc.fullName || 'N/A',
+                                insc.type === 'secondary' ? 'Secondaire' : insc.type === 'primary' ? 'Primaire' : 'Maternelle',
+                                insc.class || 'N/A',
+                                insc.birthdate || 'N/A',
+                                `$${(insc.enrollmentFees || 0).toFixed(2)}`
+                            ]);
+                        });
+                    }
+                    break;
+                    
+                case 'paiement':
+                    filename = `paiements_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    
+                    // Statistiques
+                    worksheetData.push(['STATISTIQUES GÉNÉRALES']);
+                    worksheetData.push(['Total transactions', data.totalPayments || 0]);
+                    worksheetData.push(['Montant total', `$${(data.totalAmount || 0).toFixed(2)}`]);
+                    worksheetData.push(['Élèves en ordre', data.totalPaidStudents || 0]);
+                    worksheetData.push(['Total élèves', data.totalStudents || 0]);
+                    worksheetData.push(['Taux de paiement', `${(data.globalPaymentRate || 0).toFixed(1)}%`]);
+                    worksheetData.push([]);
+                    
+                    // Détail par classe
+                    if (data.classDetails && data.classDetails.length > 0) {
+                        worksheetData.push(['DÉTAIL PAR CLASSE']);
+                        worksheetData.push(['Classe', 'Type', 'Total élèves', 'Élèves en ordre', 'Taux de paiement', 'Transactions', 'Montant total']);
+                        
+                        data.classDetails.forEach(item => {
+                            worksheetData.push([
+                                item.className || 'N/A',
+                                item.type || 'N/A',
+                                item.totalStudents || 0,
+                                item.paidStudents || 0,
+                                `${(item.paymentRate || 0).toFixed(1)}%`,
+                                item.paymentCount || 0,
+                                `$${(item.totalAmount || 0).toFixed(2)}`
+                            ]);
+                        });
+                        
+                        // Total
+                        worksheetData.push([]);
+                        worksheetData.push([
+                            'TOTAL',
+                            '',
+                            data.totalStudents || 0,
+                            data.totalPaidStudents || 0,
+                            `${(data.globalPaymentRate || 0).toFixed(1)}%`,
+                            data.totalPayments || 0,
+                            `$${(data.totalAmount || 0).toFixed(2)}`
+                        ]);
+                    }
+                    break;
+                    
+                case 'journalier':
+                    filename = `journalier_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    
+                    worksheetData.push(['RAPPORT JOURNALIER']);
+                    worksheetData.push(['Inscriptions', data.dailyInscriptions || 0]);
+                    worksheetData.push(['Transactions', data.dailyPayments || 0]);
+                    worksheetData.push(['Montant collecté', `$${(data.dailyAmount || 0).toFixed(2)}`]);
+                    worksheetData.push(['Moyenne par transaction', `$${(data.dailyPayments > 0 ? (data.dailyAmount / data.dailyPayments) : 0).toFixed(2)}`]);
+                    break;
+                    
+                case 'mensuel':
+                    filename = `mensuel_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    
+                    worksheetData.push(['RAPPORT MENSUEL']);
+                    worksheetData.push(['Inscriptions', data.monthlyInscriptions || 0]);
+                    worksheetData.push(['Transactions', data.monthlyPayments || 0]);
+                    worksheetData.push(['Montant collecté', `$${(data.monthlyAmount || 0).toFixed(2)}`]);
+                    worksheetData.push(['Moyenne journalière', `$${((data.monthlyAmount || 0) / 30).toFixed(2)}`]);
+                    break;
+                    
+                case 'statistiques':
+                    filename = `statistiques_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    
+                    worksheetData.push(['STATISTIQUES GLOBALES']);
+                    worksheetData.push(['Type de rapport', data.statsType || 'global']);
+                    worksheetData.push(['Année', data.year || 'N/A']);
+                    worksheetData.push(['Type d\'élève', data.studentType === 'all' ? 'Tous' : data.studentType || 'N/A']);
+                    worksheetData.push([]);
+                    worksheetData.push(['Pour plus de détails, veuillez générer le rapport spécifique.']);
+                    break;
+            }
+            
+            // Créer la feuille Excel
+            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Rapport');
+            
+            // Appliquer des styles de base
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            
+            // Style pour l'en-tête
+            if (!ws['A1']) ws['A1'] = {};
+            ws['A1'].s = {
+                font: { bold: true, sz: 16, color: { rgb: "3498DB" } },
+                alignment: { horizontal: "center" }
+            };
+            
+            // Style pour les titres de section
+            for (let i = 0; i < worksheetData.length; i++) {
+                const cell = worksheetData[i][0];
+                if (cell && (cell.includes('STATISTIQUES') || cell.includes('DÉTAIL') || cell.includes('LISTE') || cell.includes('RAPPORT'))) {
+                    const cellAddress = XLSX.utils.encode_cell({c: 0, r: i});
+                    if (!ws[cellAddress]) ws[cellAddress] = {};
+                    ws[cellAddress].s = {
+                        font: { bold: true, sz: 12, color: { rgb: "2C3E50" } },
+                        fill: { fgColor: { rgb: "ECF0F1" } }
+                    };
+                }
+            }
+            
+            // Enregistrer le fichier
+            XLSX.writeFile(wb, filename);
+            
+            // Message de confirmation
+            alert(`Export Excel réussi! Fichier: ${filename}`);
+        }
+
+    </script>
+</body>
+</html>
