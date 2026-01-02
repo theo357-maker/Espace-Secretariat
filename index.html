@@ -4495,6 +4495,95 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
         container.innerHTML = '<p>Erreur lors du chargement des statistiques</p>';
     }
 }
+
+// --- Recherche des Élèves pour modification (AJOUTEZ CE CODE) ---
+document.getElementById('search-student-btn').addEventListener('click', async () => {
+    const searchTerm = document.getElementById('search-student-modify').value.trim();
+    const searchType = document.getElementById('search-student-type').value;
+    
+    if (!searchTerm) {
+        showAlert("Veuillez entrer un matricule ou un nom", "error");
+        return;
+    }
+    
+    const resultsContainer = document.getElementById('student-search-results');
+    resultsContainer.innerHTML = '<p>Recherche en cours...</p>';
+    
+    try {
+        let students = [];
+        const searchTermLower = searchTerm.toLowerCase();
+        
+        // Rechercher dans les élèves secondaires
+        if (searchType === 'all' || searchType === 'secondary') {
+            const studentsSnap = await getDocs(query(collection(db, 'students'), where('status', '!=', 'deleted')));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.matricule.toLowerCase().includes(searchTermLower) || 
+                    data.fullName.toLowerCase().includes(searchTermLower)) {
+                    students.push({...data, type: 'secondary', docId: doc.id});
+                }
+            });
+        }
+        
+        // Rechercher dans les élèves primaires
+        if (searchType === 'all' || searchType === 'primary') {
+            const studentsSnap = await getDocs(query(collection(db, 'primary_students'), where('status', '!=', 'deleted')));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.matricule.toLowerCase().includes(searchTermLower) || 
+                    data.fullName.toLowerCase().includes(searchTermLower)) {
+                    students.push({...data, type: 'primary', docId: doc.id});
+                }
+            });
+        }
+        
+        // Rechercher dans les élèves maternelles
+        if (searchType === 'all' || searchType === 'kindergarten') {
+            const studentsSnap = await getDocs(query(collection(db, 'kindergarten_students'), where('status', '!=', 'deleted')));
+            studentsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.matricule.toLowerCase().includes(searchTermLower) || 
+                    data.fullName.toLowerCase().includes(searchTermLower)) {
+                    students.push({...data, type: 'kindergarten', docId: doc.id});
+                }
+            });
+        }
+        
+        if (students.length === 0) {
+            resultsContainer.innerHTML = '<p>Aucun élève trouvé</p>';
+            return;
+        }
+        
+        let html = '<div class="table-container"><table><thead><tr><th>Matricule</th><th>Nom</th><th>Type</th><th>Classe</th><th>Téléphone Parent</th><th>Actions</th></tr></thead><tbody>';
+        
+        students.forEach(student => {
+            const typeText = student.type === 'secondary' ? 'Secondaire' : 
+                           student.type === 'primary' ? 'Primaire' : 'Maternelle';
+            
+            html += `
+                <tr>
+                    <td>${student.matricule}</td>
+                    <td>${student.fullName}</td>
+                    <td>${typeText}</td>
+                    <td>${student.class}</td>
+                    <td>${student.parentPhone || ''}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="viewStudentDetails('${student.matricule}', '${student.type}')">Détails</button>
+                        <button class="btn btn-warning btn-sm" onclick="editStudent('${student.matricule}', '${student.type}')">Modifier</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStudent('${student.matricule}', '${student.type}')">Supprimer</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        resultsContainer.innerHTML = html;
+        
+    } catch (error) {
+        console.error("Erreur recherche élève:", error);
+        resultsContainer.innerHTML = '<p>Erreur lors de la recherche</p>';
+    }
+});
         // Remplacer la fonction populateExportClassSelect() par cette version corrigée
 async function populateExportClassSelect() {
     const selectEl = document.getElementById('export-class');
