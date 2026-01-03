@@ -1,5 +1,5 @@
 // Version de l'application - À MODIFIER à chaque mise à jour
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '2.2.0';
 const CACHE_NAME = `colombe-cache-v${APP_VERSION}`;
 
 // Fichiers à mettre en cache pour le fonctionnement offline
