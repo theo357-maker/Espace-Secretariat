@@ -44,7 +44,7 @@ class UpdateSystem {
       
     } catch (error) {
       console.warn('⚠️ Impossible de charger la version, utilisant valeur par défaut');
-      this.currentVersion = '2.1.0';
+      this.currentVersion = '2.2.0';
     }
   }
   
