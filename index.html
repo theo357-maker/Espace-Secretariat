@@ -7946,5 +7946,38 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
   }
 });
 </script>
+<script>
+// FORCE UPDATE SCRIPT
+(function() {
+  // Vérifier si un force update est demandé
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('forceUpdate')) {
+    console.log('🔄 Force update activé');
+    
+    // Vider tous les caches
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    
+    // Rediriger sans le paramètre
+    setTimeout(() => {
+      window.location.href = window.location.href.split('?')[0];
+    }, 100);
+  }
+  
+  // Écouter les messages du SW pour redémarrer
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'RELOAD_PAGE') {
+        console.log('🔄 Redémarrage demandé par SW');
+        window.location.reload();
+      }
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
