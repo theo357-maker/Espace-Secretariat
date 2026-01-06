@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace secretary - CS la Colombe</title>
+    <title>Espace secretary - hybrilink</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <!-- PWA Meta Tags -->
@@ -385,7 +385,7 @@
             <i > <img src="hi.png" width="50px"></i>
         </div>
         <div class="splash-text">
-            <h1>CS la Colombe</h1>
+            <h1>hybrilink</h1>
             <p>Portail Secrétariat</p>
         </div>
         <div class="loading-spinner"></div>
@@ -1210,6 +1210,8 @@
                                         <option value="Frais scolaires">Frais scolaires</option>
                                         <option value="Frais de l'état">Frais de l'état</option>
                                         <option value="visite">visite</option>
+
+
                                         <option value="achat pull">achat pull</option>
                                         <option value="Autres">Autres (veuillez spécifier)</option>
                                     </select>
@@ -1252,41 +1254,45 @@
                 <div id="manage-fees-page" class="page">
                     <div class="card">
                         <h4>Gestion des frais scolaires</h4>
-                        <div class="fees-controls">
-                            <select id="fees-student-type" class="form-control">
-                                <option value="all">Tous les élèves</option>
-                                <option value="secondary">Élèves Secondaires</option>
-                                <option value="primary">Élèves Primaires</option>
-                                <option value="kindergarten">Élèves Maternelles</option>
-                            </select>
-                            <select id="fees-class" class="form-control">
-                                <option value="">Toutes les classes</option>
-                            </select>
-                            <select id="fees-month" class="form-control">
-                                <option value="all">Tous les mois</option>
-                                <option value="janvier">Janvier</option>
-                                <option value="février">Février</option>
-                                <option value="mars">Mars</option>
-                                <option value="avril">Avril</option>
-                                <option value="mai">Mai</option>
-                                <option value="juin">Juin</option>
-                                <option value="juillet">Juillet</option>
-                                <option value="août">Août</option>
-                                <option value="septembre">Septembre</option>
-                                <option value="octobre">Octobre</option>
-                                <option value="novembre">Novembre</option>
-                                <option value="décembre">Décembre</option>
-                            </select>
-                            <select id="fees-type" class="form-control">
-                                <option value="all">Tous les types</option>
-                                <option value="Frais scolaires">Frais scolaires</option>
-                                <option value="Frais de l'état">Frais de l'état</option>
-                                <option value="visite">visite</option>
-                                <option value="achat pull">achat pull</option>
-                                <option value="Autres">Autres</option>
-                            </select>
-                            <button id="load-fees-btn" class="btn btn-primary">Afficher</button>
-                        </div>
+                       <!-- Remplacer la section existante des filtres de frais par ceci : -->
+<div class="fees-controls">
+    <select id="fees-student-type" class="form-control">
+        <option value="all">Tous les élèves</option>
+        <option value="secondary">Élèves Secondaires</option>
+        <option value="primary">Élèves Primaires</option>
+        <option value="kindergarten">Élèves Maternelles</option>
+    </select>
+    <select id="fees-class" class="form-control">
+        <option value="">Toutes les classes</option>
+    </select>
+    <select id="fees-month" class="form-control">
+        <option value="all">Tous les mois</option>
+        <option value="janvier">Janvier</option>
+        <option value="février">Février</option>
+        <option value="mars">Mars</option>
+        <option value="avril">Avril</option>
+        <option value="mai">Mai</option>
+        <option value="juin">Juin</option>
+        <option value="juillet">Juillet</option>
+        <option value="août">Août</option>
+        <option value="septembre">Septembre</option>
+        <option value="octobre">Octobre</option>
+        <option value="novembre">Novembre</option>
+        <option value="décembre">Décembre</option>
+        <!-- Ajout du filtre pour l'inscription -->
+        <option value="inscription">Frais d'inscription</option>
+    </select>
+    <select id="fees-type" class="form-control">
+        <option value="all">Tous les types</option>
+        <option value="Frais scolaires">Frais scolaires</option>
+        <option value="Frais de l'état">Frais de l'état</option>
+        <option value="visite">visite</option>
+        <option value="achat pull">achat pull</option>
+        <option value="Frais d'inscription">Frais d'inscription</option>
+        <option value="Autres">Autres</option>
+    </select>
+    <button id="load-fees-btn" class="btn btn-primary">Afficher</button>
+</div>
                         
                         <div class="fees-summary">
                             <div class="fees-summary-card">
@@ -3391,65 +3397,95 @@
 
         // --- Gestion des Classes Secondaires ---
         async function loadClassesIntoSelects() {
-            const classSelect = document.getElementById('student-class');
-            const primaryClassSelect = document.getElementById('primary-student-class');
-            const kindergartenClassSelect = document.getElementById('kindergarten-student-class');
-            const filterClassSelect = document.getElementById('filter-class');
-            const feesClassSelect = document.getElementById('fees-class');
-            const editClassSelect = document.getElementById('edit-student-class');
-            const enrollmentClassSelect = document.getElementById('enrollment-class');
-            const exportClassSelect = document.getElementById('export-class');
-            const reportClassSelect = document.getElementById('report-class');
-            
-            classSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
-            primaryClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
-            kindergartenClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
-            filterClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
-            feesClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
-            editClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
-            enrollmentClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
-            exportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
-            reportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
-            
-            try {
-                // Classes secondaires
-                const classesSnap = await getDocs(collection(db, 'classes'));
-                classesSnap.forEach(doc => {
-                    const data = doc.data();
-                    classSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    filterClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    feesClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    editClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    enrollmentClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    exportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    reportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                });
-                
-                // Classes primaires
-                const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
-                primaryClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    primaryClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    filterClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    feesClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    exportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    reportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                });
-                
-                // Classes maternelles
-                const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
-                kindergartenClassesSnap.forEach(doc => {
-                    const data = doc.data();
-                    kindergartenClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    filterClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    feesClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    exportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                    reportClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
-                });
-            } catch (error) {
-                console.error('Erreur chargement classes:', error);
-            }
+    const classSelect = document.getElementById('student-class');
+    const primaryClassSelect = document.getElementById('primary-student-class');
+    const kindergartenClassSelect = document.getElementById('kindergarten-student-class');
+    const filterClassSelect = document.getElementById('filter-class');
+    const feesClassSelect = document.getElementById('fees-class');
+    const editClassSelect = document.getElementById('edit-student-class');
+    const enrollmentClassSelect = document.getElementById('enrollment-class');
+    const exportClassSelect = document.getElementById('export-class');
+    const reportClassSelect = document.getElementById('report-class');
+    
+    // Réinitialiser seulement les champs spécifiques aux élèves
+    if (classSelect) classSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    if (primaryClassSelect) primaryClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    if (kindergartenClassSelect) kindergartenClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    if (filterClassSelect) filterClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+    if (feesClassSelect) feesClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+    if (editClassSelect) editClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    if (exportClassSelect) exportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+    if (reportClassSelect) reportClassSelect.innerHTML = '<option value="">Toutes les classes</option>';
+    
+    try {
+        // Classes secondaires - UNIQUEMENT dans le select secondaire
+        const classesSnap = await getDocs(collection(db, 'classes'));
+        classesSnap.forEach(doc => {
+            const data = doc.data();
+            if (classSelect) classSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            if (editClassSelect) editClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            if (filterClassSelect) filterClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+            if (feesClassSelect) feesClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+            if (exportClassSelect) exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+            if (reportClassSelect) reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Secondaire)</option>`;
+        });
+        
+        // Classes primaires - UNIQUEMENT dans le select primaire
+        const primaryClassesSnap = await getDocs(collection(db, 'primary_classes'));
+        primaryClassesSnap.forEach(doc => {
+            const data = doc.data();
+            if (primaryClassSelect) primaryClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            if (filterClassSelect) filterClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+            if (feesClassSelect) feesClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+            if (exportClassSelect) exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+            if (reportClassSelect) reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Primaire)</option>`;
+        });
+        
+        // Classes maternelles - UNIQUEMENT dans le select maternelle
+        const kindergartenClassesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+        kindergartenClassesSnap.forEach(doc => {
+            const data = doc.data();
+            if (kindergartenClassSelect) kindergartenClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            if (filterClassSelect) filterClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+            if (feesClassSelect) feesClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+            if (exportClassSelect) exportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+            if (reportClassSelect) reportClassSelect.innerHTML += `<option value="${data.name}">${data.name} (Maternelle)</option>`;
+        });
+    } catch (error) {
+        console.error('Erreur chargement classes:', error);
+    }
+}
+
+async function loadClassesForEditModal(studentType) {
+    const editClassSelect = document.getElementById('edit-student-class');
+    if (!editClassSelect) return;
+    
+    editClassSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+    
+    try {
+        if (studentType === 'secondary') {
+            const classesSnap = await getDocs(collection(db, 'classes'));
+            classesSnap.forEach(doc => {
+                const data = doc.data();
+                editClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            });
+        } else if (studentType === 'primary') {
+            const classesSnap = await getDocs(collection(db, 'primary_classes'));
+            classesSnap.forEach(doc => {
+                const data = doc.data();
+                editClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            });
+        } else if (studentType === 'kindergarten') {
+            const classesSnap = await getDocs(collection(db, 'kindergarten_classes'));
+            classesSnap.forEach(doc => {
+                const data = doc.data();
+                editClassSelect.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+            });
         }
+    } catch (error) {
+        console.error('Erreur chargement classes pour édition:', error);
+    }
+}
 
 // Ajoutez cette fonction après la fonction loadClassesIntoSelects() existante
 async function loadAllClassesForReports() {
@@ -4116,7 +4152,7 @@ async function loadAllClassesForReports() {
             });
         });
 
-        // --- Gestion des Frais (VERSION CORRIGÉE POUR ÉVITER LES INDEX COMPOSITES) ---
+        // Remplacer la fonction loadFeesData() actuelle par cette version améliorée
 async function loadFeesData() {
     const selectedStudentType = document.getElementById('fees-student-type').value;
     const selectedClass = document.getElementById('fees-class').value;
@@ -4174,11 +4210,25 @@ async function loadFeesData() {
         
         // Filtrer les paiements localement
         let filteredPayments = allPayments;
+        
+        // Si le mois sélectionné est "inscription", filtrer spécifiquement
         if (selectedMonth && selectedMonth !== 'all') {
-            filteredPayments = filteredPayments.filter(payment => payment.month === selectedMonth);
+            if (selectedMonth === 'inscription') {
+                filteredPayments = filteredPayments.filter(payment => 
+                    payment.month === 'inscription'
+                );
+            } else {
+                filteredPayments = filteredPayments.filter(payment => 
+                    payment.month === selectedMonth
+                );
+            }
         }
+        
+        // Filtrer par type de frais
         if (selectedType && selectedType !== 'all') {
-            filteredPayments = filteredPayments.filter(payment => payment.paymentType === selectedType);
+            filteredPayments = filteredPayments.filter(payment => 
+                payment.paymentType === selectedType
+            );
         }
         
         // Organiser les paiements par étudiant
@@ -4200,28 +4250,78 @@ async function loadFeesData() {
             studentAmounts[studentId] += payment.amount;
         });
         
+        // Pour les frais d'inscription, nous devons aussi considérer les frais d'inscription des étudiants
+        // qui pourraient ne pas avoir de paiement enregistré dans la collection 'payments'
+        if (selectedMonth === 'inscription' || selectedType === 'Frais d\'inscription') {
+            studentsList.forEach(student => {
+                const studentId = student.matricule;
+                const enrollmentFees = student.enrollmentFees || 0;
+                
+                // Si l'étudiant a des frais d'inscription
+                if (enrollmentFees > 0) {
+                    // Ajouter un paiement virtuel pour les frais d'inscription
+                    if (!studentPayments[studentId]) {
+                        studentPayments[studentId] = [];
+                        studentPaidMonths[studentId] = [];
+                        studentAmounts[studentId] = 0;
+                    }
+                    
+                    // Vérifier si un paiement pour l'inscription existe déjà
+                    const hasInscriptionPayment = studentPayments[studentId].some(p => 
+                        p.paymentType === 'Frais d\'inscription'
+                    );
+                    
+                    if (!hasInscriptionPayment && enrollmentFees > 0) {
+                        studentPayments[studentId].push({
+                            paymentType: 'Frais d\'inscription',
+                            amount: enrollmentFees,
+                            month: 'inscription',
+                            studentId: studentId,
+                            studentName: student.fullName,
+                            studentClass: student.class,
+                            studentType: student.studentType
+                        });
+                        studentPaidMonths[studentId].push('inscription');
+                        studentAmounts[studentId] += enrollmentFees;
+                    }
+                }
+            });
+        }
+        
         // Calculer les statistiques
         const totalStudents = studentsList.length;
         let paidCount = 0;
         let unpaidCount = 0;
+        let totalAmount = 0;
         
         // Analyser chaque étudiant
         studentsList.forEach(student => {
             const studentId = student.matricule;
-            const hasPayment = studentPayments[studentId] && studentPayments[studentId].length > 0;
+            const payments = studentPayments[studentId] || [];
+            const hasPayment = payments.length > 0;
             
             if (hasPayment) {
-                // Vérifier si l'étudiant a payé pour le mois sélectionné
+                // Vérifier si l'étudiant a payé selon les filtres
                 if (selectedMonth && selectedMonth !== 'all') {
-                    const paidThisMonth = studentPaidMonths[studentId]?.includes(selectedMonth);
-                    if (paidThisMonth) {
+                    const paidForSelected = studentPaidMonths[studentId]?.includes(selectedMonth);
+                    if (paidForSelected) {
                         paidCount++;
+                        totalAmount += studentAmounts[studentId] || 0;
+                    } else {
+                        unpaidCount++;
+                    }
+                } else if (selectedType && selectedType !== 'all') {
+                    const paidForSelectedType = payments.some(p => p.paymentType === selectedType);
+                    if (paidForSelectedType) {
+                        paidCount++;
+                        totalAmount += studentAmounts[studentId] || 0;
                     } else {
                         unpaidCount++;
                     }
                 } else {
-                    // Pour "Tous les mois", considérer comme payé s'il a au moins un paiement
+                    // Pour "Tous", considérer comme payé s'il a au moins un paiement
                     paidCount++;
+                    totalAmount += studentAmounts[studentId] || 0;
                 }
             } else {
                 unpaidCount++;
@@ -4260,25 +4360,66 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
         const payments = studentPayments[studentId] || [];
         const paidMonths = studentPaidMonths[studentId] || [];
         const amountPaid = studentAmounts[studentId] || 0;
+        const enrollmentFees = student.enrollmentFees || 0;
         
         const studentTypeText = student.studentType === 'secondary' ? 'Secondaire' : 
                               student.studentType === 'primary' ? 'Primaire' : 'Maternelle';
         
-        // Déterminer si l'élève a payé pour le mois sélectionné
-        let hasPaidForSelectedMonth = false;
+        // Déterminer si l'élève a payé selon les filtres
+        let hasPaidForFilter = false;
+        
         if (selectedMonth && selectedMonth !== 'all') {
-            hasPaidForSelectedMonth = paidMonths.includes(selectedMonth);
+            if (selectedMonth === 'inscription') {
+                // Vérifier les frais d'inscription
+                const hasInscriptionPayment = payments.some(p => 
+                    p.paymentType === 'Frais d\'inscription' || 
+                    p.month === 'inscription'
+                );
+                hasPaidForFilter = hasInscriptionPayment || enrollmentFees > 0;
+            } else {
+                hasPaidForFilter = paidMonths.includes(selectedMonth);
+            }
+        } else if (selectedType && selectedType !== 'all') {
+            if (selectedType === 'Frais d\'inscription') {
+                const hasInscriptionPayment = payments.some(p => 
+                    p.paymentType === 'Frais d\'inscription'
+                );
+                hasPaidForFilter = hasInscriptionPayment || enrollmentFees > 0;
+            } else {
+                hasPaidForFilter = payments.some(p => p.paymentType === selectedType);
+            }
         } else {
-            hasPaidForSelectedMonth = payments.length > 0;
+            hasPaidForFilter = payments.length > 0;
         }
         
         // Obtenir le dernier paiement
         let lastPaymentDate = null;
         let lastPaymentType = '';
         if (payments.length > 0) {
-            const sortedPayments = payments.sort((a, b) => b.validatedAt - a.validatedAt);
+            const sortedPayments = payments.sort((a, b) => 
+                (b.validatedAt?.toDate?.() || 0) - (a.validatedAt?.toDate?.() || 0)
+            );
             lastPaymentDate = sortedPayments[0]?.validatedAt;
             lastPaymentType = sortedPayments[0]?.paymentType;
+        }
+        
+        // Pour les frais d'inscription non payés, afficher le montant dû
+        const inscriptionDue = enrollmentFees - 
+            (payments.filter(p => p.paymentType === 'Frais d\'inscription')
+                .reduce((sum, p) => sum + p.amount, 0));
+        
+        // Déterminer le type de frais à afficher
+        let displayFeeType = selectedType && selectedType !== 'all' ? selectedType : 'Tous';
+        if (selectedMonth === 'inscription') {
+            displayFeeType = 'Frais d\'inscription';
+        }
+        
+        // Déterminer le montant à afficher
+        let displayAmount = amountPaid;
+        if (selectedType === 'Frais d\'inscription' || selectedMonth === 'inscription') {
+            displayAmount = payments
+                .filter(p => p.paymentType === 'Frais d\'inscription' || p.month === 'inscription')
+                .reduce((sum, p) => sum + p.amount, 0);
         }
         
         const unpaidRowHTML = `
@@ -4287,12 +4428,16 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
                 <td>${student.fullName}</td>
                 <td>${studentTypeText}</td>
                 <td>${student.class}</td>
-                <td>${selectedType && selectedType !== 'all' ? selectedType : 'Tous'}</td>
-                <td class="currency-display">$0.00</td>
+                <td>${displayFeeType}</td>
+                <td class="currency-display">$${displayAmount.toFixed(2)}</td>
                 <td>${selectedMonth && selectedMonth !== 'all' ? selectedMonth : 'Tous'}</td>
                 <td class="action-buttons">
                     <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
-                    <button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>
+                    ${inscriptionDue > 0 ? `
+                    <button class="btn btn-success" onclick="processInscriptionPayment('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}', ${inscriptionDue})">
+                        Payer Inscription
+                    </button>
+                    ` : ''}
                 </td>
             </tr>
         `;
@@ -4304,7 +4449,7 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
                 <td>${studentTypeText}</td>
                 <td>${student.class}</td>
                 <td>${lastPaymentType || 'Frais scolaires'}</td>
-                <td class="currency-display">$${amountPaid.toFixed(2)}</td>
+                <td class="currency-display">$${displayAmount.toFixed(2)}</td>
                 <td>${formatDate(lastPaymentDate?.toDate())}</td>
                 <td class="action-buttons">
                     <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
@@ -4319,16 +4464,20 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
                 <td>${studentTypeText}</td>
                 <td>${student.class}</td>
                 <td>${lastPaymentType || 'Aucun'}</td>
-                <td class="currency-display">$${amountPaid.toFixed(2)}</td>
-                <td>${hasPaidForSelectedMonth ? '<span class="badge badge-success">Payé</span>' : '<span class="badge badge-danger">Non payé</span>'}</td>
+                <td class="currency-display">$${displayAmount.toFixed(2)}</td>
+                <td>${hasPaidForFilter ? '<span class="badge badge-success">Payé</span>' : '<span class="badge badge-danger">Non payé</span>'}</td>
                 <td class="action-buttons">
                     <button class="btn btn-primary" onclick="viewStudentDetails('${student.matricule}', '${student.studentType}')">Détails</button>
-                    ${!hasPaidForSelectedMonth ? `<button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">Payer</button>` : ''}
+                    ${!hasPaidForFilter ? `
+                    <button class="btn btn-success" onclick="processPaymentForStudent('${student.matricule}', '${student.studentType}', '${student.fullName}', '${student.class}')">
+                        Payer
+                    </button>
+                    ` : ''}
                 </td>
             </tr>
         `;
         
-        if (hasPaidForSelectedMonth) {
+        if (hasPaidForFilter) {
             paidHTML += paidRowHTML;
         } else {
             unpaidHTML += unpaidRowHTML;
@@ -4341,6 +4490,46 @@ async function updateFeesStudentsLists(studentsList, studentPayments, studentPai
     paidList.innerHTML = paidHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève en ordre</td></tr>';
     allList.innerHTML = allHTML || '<tr><td colspan="8" style="text-align: center;">Aucun élève trouvé</td></tr>';
 }
+
+
+
+// Fonction pour traiter le paiement des frais d'inscription
+window.processInscriptionPayment = async (studentMatricule, studentType, studentName, studentClass, amountDue) => {
+    if (confirm(`Payer les frais d'inscription de $${amountDue.toFixed(2)} pour ${studentName} ?`)) {
+        try {
+            const paymentData = {
+                studentId: studentMatricule,
+                studentName: studentName,
+                studentClass: studentClass,
+                studentType: studentType,
+                month: 'inscription',
+                paymentType: 'Frais d\'inscription',
+                amount: amountDue,
+                validatedBy: currentSecretary.uid,
+                validatedAt: serverTimestamp(),
+                createdAt: serverTimestamp(),
+                paymentMethod: 'onsite',
+                description: 'Frais d\'inscription pour l\'année scolaire'
+            };
+            
+            const paymentRef = doc(collection(db, 'payments'));
+            await setDoc(paymentRef, paymentData);
+            
+            // Générer le reçu
+            await generateReceipt(studentName, ['inscription'], amountDue, 'INSCRIPTION-' + generatePaymentCode(), studentClass, 'Frais d\'inscription');
+            
+            showAlert(`Paiement des frais d'inscription enregistré avec succès !`, 'success');
+            
+            // Recharger les données
+            loadFeesData();
+            loadDashboardStats();
+            
+        } catch (error) {
+            console.error("Erreur paiement inscription:", error);
+            showAlert('Erreur lors du paiement: ' + error.message, 'error');
+        }
+    }
+};
 
         // Fonction pour traiter le paiement d'un étudiant directement depuis la gestion des frais
         window.processPaymentForStudent = async (studentMatricule, studentType, studentName, studentClass) => {
@@ -4711,7 +4900,7 @@ document.getElementById('export-data-btn').addEventListener('click', async () =>
         } else if (exportType === 'csv') {
             exportToCSV(exportData, 'eleves_cs_lacolombe');
         } else if (exportType === 'pdf') {
-            exportToPDF(exportData, 'Liste des Élèves - CS la Colombe');
+            exportToPDF(exportData, 'Liste des Élèves - hybrilink');
         }
         
         showAlert(`Export réussi: ${students.length} élève(s) exporté(s)`, "success");
@@ -5743,7 +5932,7 @@ setTimeout(() => {
                 <!DOCTYPE html>
                 <html>
                     <head>
-                        <title>Rapport - CS la Colombe</title>
+                        <title>Rapport - hybrilinkp</title>
                         <style>
                             body { 
                                 font-family: Arial, sans-serif; 
@@ -6219,6 +6408,8 @@ loadClassesIntoSelects();
                     </div>
                 `;
                 
+
+await loadClassesForEditModal(studentType);
                 document.getElementById('teacher-details-modal').classList.remove('hidden');
             } catch (error) {
                 showAlert('Erreur: ' + error.message, 'error');
@@ -6226,7 +6417,7 @@ loadClassesIntoSelects();
         };
 
         window.editStudent = async (studentMatricule, studentType) => {
-            try {
+    try {
                 let collectionName, docRef;
                 if (studentType === 'secondary') {
                     collectionName = 'students';
@@ -6994,72 +7185,75 @@ loadClassesIntoSelects();
 
         // Génération de reçu
         async function generateReceipt(studentName, months, amount, paymentCode, studentClass, paymentType) {
-            const receiptContent = document.getElementById('receipt-content');
-            
-            const receiptHTML = `
-                <div class="receipt">
-                    <div class="receipt-header">
-                        <div class="receipt-logo">
-                            <img src="R.png" alt="Logo CS la Colombe" style="max-width: 150px;">
-                        </div>
-                        <div class="receipt-title">REÇU DE PAIEMENT</div>
-                        <div>Complexe Scolaire la Colombe</div>
-                        <div>Code: ${paymentCode}</div>
-                    </div>
-                    
-                    <div class="receipt-details">
-                        <div class="receipt-row">
-                            <span>Élève:</span>
-                            <span>${studentName}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Classe:</span>
-                            <span>${studentClass}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Type de frais:</span>
-                            <span>${paymentType || 'Frais scolaires'}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Mois:</span>
-                            <span>${months.join(', ')}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Montant:</span>
-                            <span class="currency-display">$${amount.toFixed(2)}</span>
-                        </div>
-                        <div class="receipt-divider"></div>
-                        <div class="receipt-row">
-                            <span>Date:</span>
-                            <span>${new Date().toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span>Validé par:</span>
-                            <span>${currentSecretary.fullName}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="signature-area">
-                        <div class="signature-box">
-                            <p>Le Secrétaire</p>
-                            <div class="signature-line"></div>
-                        </div>
-                        <div class="signature-box">
-                            <p>Le Directeur</p>
-                            <div class="signature-line"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="receipt-footer">
-                        <p>Merci pour votre confiance</p>
-                        <p>Complexe Scolaire la Colombe</p>
-                    </div>
+    const receiptContent = document.getElementById('receipt-content');
+    
+    // Adapter l'affichage pour les frais d'inscription
+    const monthsDisplay = paymentType === 'Frais d\'inscription' ? 'Inscription' : months.join(', ');
+    
+    const receiptHTML = `
+        <div class="receipt">
+            <div class="receipt-header">
+                <div class="receipt-logo">
+                    <img src="R.png" alt="Logo hybrilink" style="max-width: 150px;">
                 </div>
-            `;
+                <div class="receipt-title">REÇU DE PAIEMENT</div>
+                <div>hybrilink</div>
+                <div>Code: ${paymentCode}</div>
+            </div>
             
-            receiptContent.innerHTML = receiptHTML;
-            document.getElementById('receipt-modal').classList.remove('hidden');
-        }
+            <div class="receipt-details">
+                <div class="receipt-row">
+                    <span>Élève:</span>
+                    <span>${studentName}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Classe:</span>
+                    <span>${studentClass}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Type de frais:</span>
+                    <span>${paymentType || 'Frais scolaires'}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Période:</span>
+                    <span>${monthsDisplay}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Montant:</span>
+                    <span class="currency-display">$${amount.toFixed(2)}</span>
+                </div>
+                <div class="receipt-divider"></div>
+                <div class="receipt-row">
+                    <span>Date:</span>
+                    <span>${new Date().toLocaleDateString('fr-FR')}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Validé par:</span>
+                    <span>${currentSecretary.fullName}</span>
+                </div>
+            </div>
+            
+            <div class="signature-area">
+                <div class="signature-box">
+                    <p>Le Secrétaire</p>
+                    <div class="signature-line"></div>
+                </div>
+                <div class="signature-box">
+                    <p>Le Directeur</p>
+                    <div class="signature-line"></div>
+                </div>
+            </div>
+            
+            <div class="receipt-footer">
+                <p>Merci pour votre confiance</p>
+                <p>hybrilink</p>
+            </div>
+        </div>
+    `;
+    
+    receiptContent.innerHTML = receiptHTML;
+    document.getElementById('receipt-modal').classList.remove('hidden');
+}
 
         // Impression du reçu
         document.getElementById('print-receipt-btn').addEventListener('click', () => {
@@ -7070,7 +7264,7 @@ loadClassesIntoSelects();
                 <!DOCTYPE html>
                 <html>
                     <head>
-                        <title>Reçu de paiement - CS la Colombe</title>
+                        <title>Reçu de paiement - hybrilink</title>
                         <style>
                             body { 
                                 font-family: Arial, sans-serif; 
@@ -7183,7 +7377,7 @@ loadClassesIntoSelects();
                                 <img src="R.png" alt="Logo CS la Colombe" style="max-width: 150px;">
                             </div>
                             <div class="receipt-title">BORDEREAU D'INSCRIPTION</div>
-                            <div>Complexe Scolaire la Colombe</div>
+                            <div>hybrilink</div>
                             <div>Année scolaire: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
                         </div>
                         
@@ -7266,7 +7460,7 @@ loadClassesIntoSelects();
                         
                         <div class="receipt-footer">
                             <p><strong>Important:</strong> Conservez ce bordereau pour toute référence future.</p>
-                            <p>Merci pour votre confiance - Complexe Scolaire la Colombe</p>
+                            <p>Merci pour votre confiance - hybrilink</p>
                         </div>
                     </div>
                 `;
@@ -7289,7 +7483,7 @@ loadClassesIntoSelects();
                 <!DOCTYPE html>
                 <html>
                     <head>
-                        <title>Bordereau d'inscription - CS la Colombe</title>
+                        <title>Bordereau d'inscription - hybrilink</title>
                         <style>
                             body { 
                                 font-family: Arial, sans-serif; 
@@ -7684,7 +7878,7 @@ loadClassesIntoSelects();
   }
   
   // Afficher la version dans la console
-  console.log('%c🚀 CS La Colombe - Espace Parent', 'color: #3498db; font-size: 16px; font-weight: bold;');
+  console.log('%c🚀 hybrilink - Espace Parent', 'color: #3498db; font-size: 16px; font-weight: bold;');
   console.log('%cSystème de mise à jour en temps réel activé', 'color: #2ecc71;');
   
 })();
@@ -7747,7 +7941,7 @@ window.clearAppCache = function() {
   }
   
   // Afficher la version dans la console
-  console.log('%c🚀 CS La Colombe - Espace Parent', 'color: #3498db; font-size: 16px; font-weight: bold;');
+  console.log('%c🚀 hybrilink - Espace Parent', 'color: #3498db; font-size: 16px; font-weight: bold;');
   console.log('%cSystème de mise à jour en temps réel activé', 'color: #2ecc71;');
   
 })();
